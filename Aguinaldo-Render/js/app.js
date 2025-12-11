@@ -234,11 +234,21 @@ const App = {
     resultRarity.className =
       "inline-block rarity-badge " + ItemManager.getRarityClass(item.rarity);
 
-    this.resultModal.classList.add("active");
-    // Force inline display to help some iOS/Safari instances repaint fixed elements
-    this.resultModal.style.display = 'flex';
-    // Force reflow
+    // iOS FIX: Remove 'active' class manipulation, use display directly
+    this.resultModal.style.display = "flex";
+
+    // iOS FIX: Force body scroll lock
+    document.body.style.overflow = "hidden";
+    document.body.style.position = "fixed";
+    document.body.style.width = "100%";
+
+    // Force reflow - critical for iOS
     void this.resultModal.offsetHeight;
+
+    // Add active class after display is set
+    setTimeout(() => {
+      this.resultModal.classList.add("active");
+    }, 10);
 
     // Restore the spin button state when result modal opens
     const stopBtn = document.getElementById("stopSpinBtn");
@@ -259,8 +269,17 @@ const App = {
   // Close result modal
   closeResult() {
     this.resultModal.classList.remove("active");
-    // Hide explicitly for iOS compatibility
-    this.resultModal.style.display = 'none';
+
+    // iOS FIX: Restore body scroll
+    document.body.style.overflow = "";
+    document.body.style.position = "";
+    document.body.style.width = "";
+
+    // Hide after transition
+    setTimeout(() => {
+      this.resultModal.style.display = "none";
+    }, 300);
+
     // Only reset spinner when closing result
     Spinner.reset();
   },
@@ -269,73 +288,34 @@ const App = {
   openSettings() {
     ItemManager.renderItemsList();
     this.clearItemForm();
-    this.settingsModal.classList.add("active");
-    this.settingsModal.style.display = 'flex';
+
+    // iOS FIX: Lock body scroll
+    document.body.style.overflow = "hidden";
+    document.body.style.position = "fixed";
+    document.body.style.width = "100%";
+
+    this.settingsModal.style.display = "flex";
     void this.settingsModal.offsetHeight;
+
+    setTimeout(() => {
+      this.settingsModal.classList.add("active");
+    }, 10);
   },
 
   // Close settings modal
   closeSettings() {
     this.settingsModal.classList.remove("active");
-    this.settingsModal.style.display = 'none';
+
+    // iOS FIX: Restore body scroll
+    document.body.style.overflow = "";
+    document.body.style.position = "";
+    document.body.style.width = "";
+
+    setTimeout(() => {
+      this.settingsModal.style.display = "none";
+    }, 300);
+
     this.clearItemForm();
-  },
-
-  // Handle add or update item
-  handleAddOrUpdateItem() {
-    const valueInput = document.getElementById("newItemValue");
-    const weightInput = document.getElementById("newItemWeight");
-    const rarityInput = document.getElementById("newItemRarity");
-    const addBtn = document.getElementById("addItemBtn");
-
-    const value = valueInput.value.trim();
-    const weight = parseInt(weightInput.value);
-    const rarity = rarityInput.value;
-
-    // Check if in edit mode
-    const editId = addBtn.dataset.editId;
-
-    let result;
-    if (editId) {
-      result = ItemManager.editItem(editId, value, weight, rarity);
-      delete addBtn.dataset.editId;
-      addBtn.textContent = "+ Add Item";
-    } else {
-      result = ItemManager.addItem(value, weight, rarity);
-    }
-
-    if (result.success) {
-      this.showToast(result.message);
-      this.clearItemForm();
-      ItemManager.renderItemsList();
-      // Update spinner items
-      Spinner.init();
-    } else {
-      this.showToast(result.message);
-    }
-  },
-
-  // Handle reset items
-  handleResetItems() {
-    this.showConfirm(
-      "Reset Items",
-      "This will reset all items to default values. Are you sure?",
-      () => {
-        const result = ItemManager.resetToDefault();
-        this.showToast(result.message);
-        Spinner.init();
-      }
-    );
-  },
-
-  // Clear item form
-  clearItemForm() {
-    document.getElementById("newItemValue").value = "";
-    document.getElementById("newItemWeight").value = "";
-    document.getElementById("newItemRarity").value = "common";
-    const addBtn = document.getElementById("addItemBtn");
-    addBtn.textContent = "+ Add Item";
-    delete addBtn.dataset.editId;
   },
 
   // Show confirmation modal
@@ -343,18 +323,35 @@ const App = {
     document.getElementById("confirmTitle").textContent = title;
     document.getElementById("confirmMessage").textContent = message;
     this.confirmCallback = callback;
-    this.confirmModal.classList.add("active");
-    this.confirmModal.style.display = 'flex';
+
+    // iOS FIX: Lock body scroll
+    document.body.style.overflow = "hidden";
+    document.body.style.position = "fixed";
+    document.body.style.width = "100%";
+
+    this.confirmModal.style.display = "flex";
     void this.confirmModal.offsetHeight;
+
+    setTimeout(() => {
+      this.confirmModal.classList.add("active");
+    }, 10);
   },
 
   // Close confirmation modal
   closeConfirm() {
     this.confirmModal.classList.remove("active");
-    this.confirmModal.style.display = 'none';
+
+    // iOS FIX: Restore body scroll
+    document.body.style.overflow = "";
+    document.body.style.position = "";
+    document.body.style.width = "";
+
+    setTimeout(() => {
+      this.confirmModal.style.display = "none";
+    }, 300);
+
     this.confirmCallback = null;
   },
-
   // Show toast notification
   showToast(message) {
     const toastMessage = document.getElementById("toastMessage");
