@@ -76,6 +76,24 @@ const App = {
     try {
       console.log("=== App initializing ===");
 
+      // Log memory usage if available
+      if (performance && performance.memory) {
+        var mem = performance.memory;
+        var usedMB = (mem.usedJSHeapSize / 1048576).toFixed(2);
+        var totalMB = (mem.totalJSHeapSize / 1048576).toFixed(2);
+        var limitMB = (mem.jsHeapSizeLimit / 1048576).toFixed(2);
+        console.log(
+          "JS Heap Memory: " +
+            usedMB +
+            " MB used / " +
+            totalMB +
+            " MB total (limit: " +
+            limitMB +
+            " MB)"
+        );
+      } else {
+        console.log("JS Heap Memory info not available in this browser.");
+      }
       // PREVENT PAGE RELOADS FIRST
       this.preventReload();
 
@@ -400,42 +418,59 @@ const App = {
         width: 100vw;
         height: 100vh;
         z-index: 100010;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        padding: 1rem;
-        overflow-y: auto;
-        -webkit-overflow-scrolling: touch;
-        opacity: 0;
-        transition: opacity 0.25s ease;
-        will-change: opacity, transform;
-        transform: translateZ(0);
-      `
-      );
+        try {
+          console.log("=== SHOWRESULT (iPhone Safe) ===");
 
-      resultScreen.innerHTML = this.createResultHTML(item);
+          // Log memory usage before showing result
+          if (performance && performance.memory) {
+            var mem = performance.memory;
+            var usedMB = (mem.usedJSHeapSize / 1048576).toFixed(2);
+            var totalMB = (mem.totalJSHeapSize / 1048576).toFixed(2);
+            var limitMB = (mem.jsHeapSizeLimit / 1048576).toFixed(2);
+            console.log(
+              "[SHOWRESULT] Before overlay: " +
+                usedMB +
+                " MB used / " +
+                totalMB +
+                " MB total (limit: " +
+                limitMB +
+                " MB)"
+            );
+          }
 
-      document.body.appendChild(resultScreen);
+          // Support confettiDelay option
+          let confettiDelay = 1200;
+          if (arguments.length > 1 && typeof arguments[1] === 'object' && arguments[1].confettiDelay !== undefined) {/* Lines 379-380 omitted */}
 
-      // Prevent double-tap zoom and unwanted scroll on iOS
-      resultScreen.addEventListener('touchstart', function(e) {
-        if (e.touches.length > 1) {
-          e.preventDefault();
-        }
-      }, { passive: false });
+          const spinnerScreen = this.spinnerScreen;
+          const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
 
-      // --- FORCE iPhone to repaint the element ---
-      // Use double requestAnimationFrame for iOS reliability
-      requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-          resultScreen.style.opacity = "1";
-          // Trigger confetti after confettiDelay ms (modal is visible)
-          setTimeout(() => this.triggerConfetti(isIOS), confettiDelay);
-        });
-      });
+          // Instead of changing spinnerScreen opacity, add a lightweight overlay
+          let overlay = document.createElement('div');
+          overlay.id = 'resultOverlayBg';
+          overlay.setAttribute('style', [
+            'position: fixed',
+            'inset: 0',
+            'width: 100vw',
+            'height: 100vh',
+            'background: rgba(0,0,0,0.65)',
+            'z-index: 100009',
+            'pointer-events: none',
+            'transition: opacity 0.25s ease',
+            'opacity: 0',
+            'will-change: opacity'
+          ].join(';') + ';');
+          document.body.appendChild(overlay);
+          // Fade in overlay
+          requestAnimationFrame(() => {/* Lines 403-404 omitted */});
 
-      // --- SAFER event handling using delegation ---
-      resultScreen.addEventListener("click", (e) => {
+          if (spinnerScreen) {/* Lines 407-408 omitted */}
+
+          // Create the result screen
+          const resultScreen = document.createElement("div");
+          resultScreen.id = "resultScreen";
+          /* Lines 413-487 omitted */
+        } catch (err) {/* Lines 488-489 omitted */}
         const id = e.target.id || e.target.closest("button")?.id || "";
 
         if (id === "tryAgainBtnFS") {
