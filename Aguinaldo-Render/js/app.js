@@ -684,10 +684,15 @@ const App = {
 
     rs.style.opacity = "0";
 
+    // Detect iOS
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+
     setTimeout(() => {
       rs.remove();
       if (this.spinnerScreen) {
-        this.spinnerScreen.style.opacity = "1";
+        if (!isIOS) {
+          this.spinnerScreen.style.opacity = "1";
+        }
         this.spinnerScreen.style.pointerEvents = "auto";
       }
     }, 200);
