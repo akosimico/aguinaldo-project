@@ -16,8 +16,10 @@ const Spinner = {
     this.track = document.getElementById("spinnerTrack");
     this.items = ItemManager.getAllItems();
 
-    // Initialize tick sound using Web Audio API
-    this.initTickSound();
+    // Initialize tick sound using Web Audio API (reuse context)
+    if (!this.audioContext) {
+      this.initTickSound();
+    }
   },
 
   // Create tick sound
@@ -75,8 +77,8 @@ const Spinner = {
   // Generate spinner items array
   generateSpinnerItems(selectedItem) {
     const spinnerItems = [];
-    const totalItems = 50;
-    const cycles = 25;
+    const totalItems = 30; // reduced from 50
+    const cycles = 10; // reduced from 25
 
     for (let cycle = 0; cycle < cycles; cycle++) {
       for (let i = 0; i < totalItems; i++) {
