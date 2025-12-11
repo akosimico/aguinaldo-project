@@ -266,6 +266,8 @@ const Spinner = {
 
   // Finish spinning
   finish() {
+    console.log("=== SPINNER FINISH START ===");
+
     this.isSpinning = false;
 
     if (this.animationFrame) {
@@ -310,12 +312,31 @@ const Spinner = {
       winningItem = this.selectedItem;
     }
 
-    // ADD THIS - Play winning sound
+    console.log("Winning item:", JSON.stringify(winningItem));
+    console.log("About to call showResult in 1500ms");
+
+    // Play winning sound
     this.playWinSound();
 
+    // CRITICAL: Call showResult after delay
     setTimeout(() => {
-      App.showResult(winningItem);
+      console.log("=== CALLING APP.SHOWRESULT ===");
+      console.log("Timestamp:", Date.now());
+      console.log("App object exists:", typeof App !== "undefined");
+      console.log(
+        "App.showResult exists:",
+        typeof App.showResult === "function"
+      );
+
+      if (typeof App !== "undefined" && App.showResult) {
+        App.showResult(winningItem);
+        console.log("=== APP.SHOWRESULT CALLED SUCCESSFULLY ===");
+      } else {
+        console.error("ERROR: App or App.showResult not found!");
+      }
     }, 1500);
+
+    console.log("=== SPINNER FINISH END ===");
   },
 
   // ADD THIS METHOD - Play winning sound
