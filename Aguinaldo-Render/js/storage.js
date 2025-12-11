@@ -30,31 +30,37 @@ const Storage = {
             {
                 id: this.generateId(),
                 value: '₱20',
-                weight: 30,
+                weight: 65,
                 rarity: 'common'
             },
             {
                 id: this.generateId(),
                 value: '₱50',
-                weight: 25,
+                weight: 54,
                 rarity: 'common'
             },
             {
                 id: this.generateId(),
                 value: '₱100',
-                weight: 20,
-                rarity: 'common'
+                weight: 43,
+                rarity: 'uncommon'
             },
             {
                 id: this.generateId(),
                 value: '₱200',
-                weight: 15,
+                weight: 32,
                 rarity: 'uncommon'
             },
             {
                 id: this.generateId(),
                 value: '₱500',
-                weight: 10,
+                weight: 3,
+                rarity: 'rare'
+            }
+            ,{
+                id: this.generateId(),
+                value: '₱1,000',
+                weight: 3,
                 rarity: 'rare'
             }
         ];
