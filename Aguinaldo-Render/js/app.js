@@ -349,11 +349,14 @@ const App = {
       console.log("=== SHOWRESULT (iPhone Safe) ===");
 
       const spinnerScreen = this.spinnerScreen;
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
 
-      // SAFER: use opacity fade instead of blur (iOS bug)
+      // On iOS, avoid opacity changes (can trigger reloads)
       if (spinnerScreen) {
-        spinnerScreen.style.opacity = "0.25";
-        spinnerScreen.style.pointerEvents = "none"; // but allow overlay
+        if (!isIOS) {
+          spinnerScreen.style.opacity = "0.25";
+        }
+        spinnerScreen.style.pointerEvents = "none";
       }
 
       // Create the result screen
@@ -415,7 +418,7 @@ const App = {
       }
 
       // Light confetti (iPhone-safe)
-      setTimeout(() => this.triggerConfetti(), 150);
+      setTimeout(() => this.triggerConfetti(isIOS), 150);
 
       // iPhone vibration fallback
       if (navigator.vibrate) {
@@ -458,75 +461,76 @@ const App = {
             <line x1="8" y1="14" x2="16" y2="14" stroke="#F59E0B" stroke-width="2"/>
             <path d="M 10 8 Q 9 6 10 5 Q 11 6 12 6 Q 13 6 14 5 Q 15 6 14 8" fill="#F59E0B" stroke="#F59E0B" stroke-width="1"/>
           </svg>
-        </div>
+        triggerConfetti(isIOS = false) {
+          try {
+            console.log("=== Confetti triggered ===");
 
-        <!-- Title -->
-        <h2 style="
-          font-size: clamp(1.5rem, 5vw, 2rem);
-          font-weight: 800;
-          color: #1f2937;
-          margin-bottom: 0.75rem;
-          font-family: 'Poppins', sans-serif;
-          line-height: 1.2;
-        ">
-          Congratulations!
-        </h2>
+            this.playConfettiSound();
 
-        <!-- Subtitle -->
-        <p style="
-          color: #6b7280;
-          margin-bottom: 0.5rem;
-          font-size: clamp(0.875rem, 3vw, 1rem);
-          font-weight: 500;
-        ">You received</p>
+            const colors = [
+              "#10B981",
+              "#DC2626",
+              "#F59E0B",
+              "#8B5CF6",
+              "#EC4899",
+              "#3B82F6",
+            ];
+            const shapes = ["circle", "square"];
+            // Reduce confetti count for iOS
+            const confettiCount = isIOS ? 20 : 60;
 
-        <!-- Amount -->
-        <div style="
-          font-size: clamp(2rem, 8vw, 3.5rem);
-          font-weight: 800;
-          background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-          -webkit-background-clip: text;
-          -webkit-text-fill-color: transparent;
-          background-clip: text;
-          margin: 1rem 0;
-          font-family: 'Poppins', sans-serif;
-          line-height: 1.2;
-          word-break: break-word;
-        ">
-          ${item.value}
-        </div>
+            for (let i = 0; i < confettiCount; i++) {
+              setTimeout(() => {
+                const confetti = document.createElement("div");
+                const color = colors[Math.floor(Math.random() * colors.length)];
+                const shape = shapes[Math.floor(Math.random() * shapes.length)];
+                const size = 8 + Math.random() * 6;
+                const startX = Math.random() * 100;
+                const drift = (Math.random() - 0.5) * 100;
 
-        <!-- Rarity Badge -->
-        <div style="
-          display: inline-block;
-          padding: 6px 16px;
-          border-radius: 12px;
-          font-weight: 600;
-          text-transform: uppercase;
-          font-size: clamp(0.75rem, 2.5vw, 0.875rem);
-          background: linear-gradient(135deg, ${rarityGradient});
-          color: white;
-          margin-bottom: clamp(1rem, 3vw, 1.5rem);
-          box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-          letter-spacing: 0.5px;
-        ">
-          ${item.rarity}
-        </div>
+                confetti.style.position = "fixed";
+                confetti.style.width = size + "px";
+                confetti.style.height = size + "px";
+                confetti.style.top = "-20px";
+                confetti.style.left = startX + "%";
+                confetti.style.background = color;
+                confetti.style.zIndex = "10001";
+                confetti.style.pointerEvents = "none";
+                confetti.style.borderRadius = shape === "circle" ? "50%" : "2px";
+                confetti.style.opacity = "0.8";
 
-        <!-- Christmas Message -->
-        <div style="
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: 0.5rem;
-          color: #9ca3af;
-          font-style: italic;
-          margin: clamp(1rem, 3vw, 1.5rem) 0 clamp(1.5rem, 4vw, 2rem) 0;
-          font-size: clamp(0.875rem, 3vw, 1rem);
-          flex-wrap: wrap;
-        ">
-          <svg xmlns="http://www.w3.org/2000/svg" width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="flex-shrink: 0; max-width: 50px; height: auto;">
-            <path d="M12 2 L16 8 L14 8 L18 14 L6 14 L10 8 L8 8 Z" fill="#059669" stroke="#047857" stroke-width="1.5"/>
+                const duration = 2.5 + Math.random() * 1.5;
+                const rotation = 360 + Math.random() * 360;
+
+                confetti.animate(
+                  [
+                    {
+                      transform: 'translateY(0) translateX(0) rotate(0deg)',
+                      opacity: 0.9
+                    },
+                    {
+                      transform: 'translateY(' + (window.innerHeight + 50) + 'px) translateX(' + drift + 'px) rotate(' + rotation + 'deg)',
+                      opacity: 0
+                    }
+                  ],
+                  {
+                    duration: duration * 1000,
+                    easing: "cubic-bezier(0.25, 0.46, 0.45, 0.94)",
+                    fill: "forwards"
+                  }
+                );
+
+                document.body.appendChild(confetti);
+
+                setTimeout(() => {
+                  confetti.remove();
+                }, (duration + 0.5) * 1000);
+              }, i * 40);
+            }
+          } catch (error) {
+            console.error("Confetti error:", error);
+          }
+        },
             <polygon points="12,1 12.5,2.5 14,3 12.5,3.5 12,5 11.5,3.5 10,3 11.5,2.5" fill="#FBBF24" stroke="#F59E0B" stroke-width="0.5"/>
             <rect x="10.5" y="14" width="3" height="3" rx="0.5" fill="#7C4A2A" stroke="#5C3A1A"/>
             <circle cx="10" cy="10" r="0.8" fill="#DC2626"/>
@@ -931,8 +935,10 @@ const App = {
   // Play confetti sound using Web Audio API
   playConfettiSound() {
     try {
-      const audioContext = new (window.AudioContext ||
-        window.webkitAudioContext)();
+      if (!this._audioContext) {
+        this._audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      const audioContext = this._audioContext;
 
       const oscillator = audioContext.createOscillator();
       const gainNode = audioContext.createGain();
