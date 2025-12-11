@@ -35,7 +35,7 @@ const App = {
   init() {
     try {
       console.log("=== App initializing ===");
-      
+
       // Get DOM elements
       this.landingScreen = document.getElementById("landingScreen");
       this.spinnerScreen = document.getElementById("spinnerScreen");
@@ -57,7 +57,7 @@ const App = {
 
       // Setup shake detection (optional)
       this.setupShakeDetection();
-      
+
       console.log("=== App initialized successfully ===");
     } catch (error) {
       console.error("App initialization error:", error);
@@ -97,16 +97,20 @@ const App = {
       // Allow tapping anywhere on spinner screen to stop
       if (this.spinnerScreen) {
         this.spinnerScreen.addEventListener("click", (e) => {
+          console.log("Spinner screen clicked");
+
           if (document.getElementById("resultScreen")) {
             console.log("Result screen is open, ignoring spinner click");
             return;
           }
 
           if (!Spinner.isSpinning) {
+            console.log("Spinner not spinning, ignoring click");
             return;
           }
 
           if (e.target.id !== "stopSpinBtn") {
+            console.log("Background tap detected, stopping spinner");
             const stopBtn = document.getElementById("stopSpinBtn");
             if (stopBtn) {
               stopBtn.disabled = true;
@@ -243,6 +247,7 @@ const App = {
   // Show landing screen
   showLanding() {
     try {
+      console.log("Showing landing screen");
       if (this.landingScreen) {
         this.landingScreen.classList.remove("hidden");
       }
@@ -257,13 +262,14 @@ const App = {
   // Show spinner screen
   showSpinner() {
     try {
+      console.log("Showing spinner screen");
       if (this.landingScreen) {
         this.landingScreen.classList.add("hidden");
       }
       if (this.spinnerScreen) {
         this.spinnerScreen.classList.remove("hidden");
       }
-      
+
       const stopBtn = document.getElementById("stopSpinBtn");
       if (stopBtn) {
         stopBtn.disabled = false;
@@ -281,18 +287,24 @@ const App = {
   // Show result as full-screen overlay with blurred spinner background
   showResult(item) {
     try {
-      console.log("=== Creating result screen ===");
+      console.log("=== SHOWRESULT CALLED ===");
+      console.log("Timestamp:", Date.now());
       console.log("Item:", JSON.stringify(item));
+      console.log("Spinner screen exists:", !!this.spinnerScreen);
+      console.log("Landing screen exists:", !!this.landingScreen);
 
-      // Apply blur to spinner screen if it exists
-      if (this.spinnerScreen) {
-        this.spinnerScreen.style.filter = "blur(10px)";
-        this.spinnerScreen.style.webkitFilter = "blur(10px)";
-        this.spinnerScreen.style.pointerEvents = "none";
+      // CRITICAL: Disable ALL event listeners temporarily
+      const spinnerScreen = this.spinnerScreen;
+      if (spinnerScreen) {
+        console.log("Disabling spinner screen events");
+        spinnerScreen.style.pointerEvents = "none";
+        spinnerScreen.style.filter = "blur(10px)";
+        spinnerScreen.style.webkitFilter = "blur(10px)";
       }
 
-      // Hide other screens if they exist
+      // Hide other screens
       if (this.landingScreen) {
+        console.log("Hiding landing screen");
         this.landingScreen.style.display = "none";
       }
       if (this.settingsModal) {
@@ -301,6 +313,7 @@ const App = {
 
       // Create result screen HTML
       const resultHTML = this.createResultHTML(item);
+      console.log("Result HTML created, length:", resultHTML.length);
 
       // Create element
       const resultScreen = document.createElement("div");
@@ -308,7 +321,9 @@ const App = {
       resultScreen.innerHTML = resultHTML;
 
       // Apply styles
-      resultScreen.setAttribute("style", `
+      resultScreen.setAttribute(
+        "style",
+        `
         position: fixed;
         top: 0;
         left: 0;
@@ -326,23 +341,42 @@ const App = {
         padding: 1rem;
         overflow-y: auto;
         -webkit-overflow-scrolling: touch;
-      `);
+      `
+      );
 
-      // Append to body
+      console.log("About to append result screen to body");
       document.body.appendChild(resultScreen);
-      console.log("Result screen appended to body");
+      console.log("Result screen appended");
+
+      // Verify it's in the DOM
+      const checkResult = document.getElementById("resultScreen");
+      console.log("Result screen in DOM:", !!checkResult);
+      console.log(
+        "Result screen display:",
+        checkResult ? window.getComputedStyle(checkResult).display : "N/A"
+      );
+      console.log(
+        "Result screen z-index:",
+        checkResult ? window.getComputedStyle(checkResult).zIndex : "N/A"
+      );
 
       // Add animation styles
       this.addResultStyles();
 
-      // Setup button listeners using setTimeout for iOS
+      // Setup button listeners
       setTimeout(() => {
+        console.log("Setting up button listeners");
         const tryAgainBtn = document.getElementById("tryAgainBtnFS");
         const backHomeBtn = document.getElementById("backHomeBtnFS");
 
+        console.log("Try again button exists:", !!tryAgainBtn);
+        console.log("Back home button exists:", !!backHomeBtn);
+
         if (tryAgainBtn) {
-          tryAgainBtn.onclick = () => {
-            console.log("Try again clicked");
+          tryAgainBtn.onclick = (e) => {
+            console.log("=== TRY AGAIN CLICKED ===");
+            e.preventDefault();
+            e.stopPropagation();
             this.closeResult();
             if (this.spinnerScreen) {
               this.showSpinner();
@@ -351,14 +385,18 @@ const App = {
         }
 
         if (backHomeBtn) {
-          backHomeBtn.onclick = () => {
-            console.log("Back home clicked");
+          backHomeBtn.onclick = (e) => {
+            console.log("=== BACK HOME CLICKED ===");
+            e.preventDefault();
+            e.stopPropagation();
             this.closeResult();
             if (this.landingScreen) {
               this.showLanding();
             }
           };
         }
+
+        console.log("Button listeners attached");
       }, 100);
 
       // Restore spin button
@@ -379,20 +417,43 @@ const App = {
         }
       }
 
-      console.log("=== Result screen created successfully ===");
+      console.log("=== SHOWRESULT COMPLETE ===");
+      console.log("Result screen should be visible now");
+
+      // Double-check after 1 second
+      setTimeout(() => {
+        const stillThere = document.getElementById("resultScreen");
+        console.log("=== 1 SECOND LATER CHECK ===");
+        console.log("Result screen still in DOM:", !!stillThere);
+        if (!stillThere) {
+          console.error("❌ ERROR: Result screen was removed!");
+          console.trace();
+        } else {
+          console.log("✅ Result screen still visible");
+        }
+      }, 1000);
+
+      // Check after 2 seconds
+      setTimeout(() => {
+        const stillThere2 = document.getElementById("resultScreen");
+        console.log("=== 2 SECONDS LATER CHECK ===");
+        console.log("Result screen still in DOM:", !!stillThere2);
+        if (!stillThere2) {
+          console.error("❌ ERROR: Result screen disappeared after 2 seconds!");
+        } else {
+          console.log("✅ Result screen still visible after 2 seconds");
+        }
+      }, 2000);
     } catch (error) {
-      console.error("CRITICAL ERROR in showResult:", error);
-      // Fallback
-      if (this.landingScreen) {
-        this.showLanding();
-      }
+      console.error("❌ CRITICAL ERROR in showResult:", error);
+      console.error("Stack:", error.stack);
     }
   },
 
   // Create result HTML (responsive version)
   createResultHTML(item) {
     const rarityGradient = this.getRarityGradient(item.rarity);
-    
+
     return `
       <div style="
         background: white;
@@ -613,35 +674,49 @@ const App = {
 
   // Close result screen
   closeResult() {
+    console.log("=== CLOSERESULT CALLED ===");
+    console.log("Call stack:");
+    console.trace(); // This will show WHO called closeResult
+
     try {
       const resultScreen = document.getElementById("resultScreen");
+      console.log("Result screen exists when closing:", !!resultScreen);
+
       if (resultScreen) {
+        console.log("Fading out result screen");
         resultScreen.style.opacity = "0";
         resultScreen.style.transition = "opacity 0.3s ease";
 
         setTimeout(() => {
+          console.log("Removing result screen from DOM");
           resultScreen.remove();
-          
+
           if (this.spinnerScreen) {
+            console.log("Restoring spinner screen");
             this.spinnerScreen.style.filter = "none";
             this.spinnerScreen.style.webkitFilter = "none";
             this.spinnerScreen.style.pointerEvents = "auto";
           }
-          
+
           if (this.landingScreen) {
+            console.log("Showing landing screen");
             this.landingScreen.style.display = "";
           }
           if (this.spinnerScreen) {
             this.spinnerScreen.style.display = "";
           }
+
+          console.log("Result screen removed successfully");
         }, 300);
+      } else {
+        console.warn("⚠️ closeResult called but no result screen found");
       }
 
-      if (typeof Spinner !== 'undefined' && Spinner.reset) {
+      if (typeof Spinner !== "undefined" && Spinner.reset) {
         Spinner.reset();
       }
     } catch (error) {
-      console.error("Error closing result:", error);
+      console.error("❌ Error closing result:", error);
     }
   },
 
@@ -778,7 +853,7 @@ const App = {
 
       if (confirmTitle) confirmTitle.textContent = title;
       if (confirmMessage) confirmMessage.textContent = message;
-      
+
       this.confirmCallback = callback;
 
       if (this.confirmModal) {
