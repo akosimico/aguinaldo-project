@@ -252,7 +252,6 @@ const App = {
   showResult(item) {
     console.log("=== showResult called ===");
     console.log("Item:", item);
-    console.log("Modal element:", this.resultModal);
 
     const resultAmount = document.getElementById("resultAmount");
     const resultRarity = document.getElementById("resultRarity");
@@ -262,34 +261,29 @@ const App = {
       return;
     }
 
+    // CRITICAL: Hide spinner screen FIRST to prevent iOS interference
+    this.spinnerScreen.style.visibility = "hidden";
+    this.spinnerScreen.style.pointerEvents = "none";
+
     // Set content
     resultAmount.textContent = item.value;
     resultRarity.textContent = item.rarity;
     resultRarity.className =
       "inline-block rarity-badge " + ItemManager.getRarityClass(item.rarity);
 
-    // Show modal with proper sequence
+    // Show modal
     this.resultModal.style.display = "flex";
-    this.resultModal.style.zIndex = "2000"; // Ensure it's on top
-    this.resultModal.style.pointerEvents = "auto"; // ADD THIS
+    this.resultModal.style.zIndex = "2000";
+    this.resultModal.style.pointerEvents = "auto";
 
-    console.log("Modal display set to:", this.resultModal.style.display);
-    console.log("Modal z-index:", this.resultModal.style.zIndex);
+    // Force iOS to acknowledge the changes
+    void this.resultModal.offsetWidth;
+    void document.body.offsetWidth;
 
-    // Force reflow
-    void this.resultModal.offsetHeight;
-    // Use setTimeout instead of requestAnimationFrame for iOS
     setTimeout(() => {
       this.resultModal.classList.add("active");
-      console.log("Modal should be visible now");
-    }, 50); // Small delay for iOS
-
-    // Add active class after a frame
-    requestAnimationFrame(() => {
-      this.resultModal.classList.add("active");
-      console.log("Active class added");
-      console.log("Modal classes:", this.resultModal.classList.toString());
-    });
+      console.log("Modal activated");
+    }, 100);
 
     // Restore the spin button state
     const stopBtn = document.getElementById("stopSpinBtn");
@@ -305,8 +299,6 @@ const App = {
     if (navigator.vibrate) {
       navigator.vibrate([200, 100, 200]);
     }
-
-    console.log("=== showResult complete ===");
   },
 
   // Close result modal
@@ -316,6 +308,9 @@ const App = {
     // Wait for fade animation before hiding
     setTimeout(() => {
       this.resultModal.style.display = "none";
+      // Restore spinner screen visibility
+      this.spinnerScreen.style.visibility = "visible";
+      this.spinnerScreen.style.pointerEvents = "auto";
     }, 300);
 
     Spinner.reset();
