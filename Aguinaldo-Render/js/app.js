@@ -143,35 +143,28 @@ const App = {
         });
       }
 
-      // Allow tapping anywhere on spinner screen to stop
+      // Allow tapping anywhere on spinner screen to stop — iPhone SAFE
       if (this.spinnerScreen) {
         this.spinnerScreen.addEventListener("click", (e) => {
-          e.preventDefault();
-          e.stopPropagation();
+          // Ignore clicks on buttons
+          if (e.target.closest("button")) return;
 
-          console.log("Spinner screen clicked");
+          console.log("Background tapped");
 
-          if (document.getElementById("resultScreen")) {
-            console.log("Result screen is open, ignoring spinner click");
-            return false;
+          // If result screen is open, do nothing
+          if (document.getElementById("resultScreen")) return;
+
+          // If spinner isn't spinning, ignore
+          if (!Spinner.isSpinning) return;
+
+          // Stop spinner
+          const stopBtn = document.getElementById("stopSpinBtn");
+          if (stopBtn) {
+            stopBtn.disabled = true;
+            stopBtn.innerHTML = this.spinIconHTMLs.spinning;
           }
 
-          if (!Spinner.isSpinning) {
-            console.log("Spinner not spinning, ignoring click");
-            return false;
-          }
-
-          if (e.target.id !== "stopSpinBtn") {
-            console.log("Background tap detected, stopping spinner");
-            const stopBtn = document.getElementById("stopSpinBtn");
-            if (stopBtn) {
-              stopBtn.disabled = true;
-              stopBtn.innerHTML = this.spinIconHTMLs.spinning;
-            }
-            Spinner.stop();
-          }
-
-          return false;
+          Spinner.stop();
         });
       }
 
