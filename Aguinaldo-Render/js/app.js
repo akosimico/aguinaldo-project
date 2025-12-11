@@ -47,6 +47,34 @@ const App = {
       true
     );
 
+    // Prevent Enter key from submitting forms (iOS Safari workaround)
+    document.addEventListener(
+      "keydown",
+      (e) => {
+        if (e.key === "Enter" && e.target && (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA")) {
+          // If inside a form, prevent default
+          let el = e.target;
+          while (el) {
+            if (el.tagName === "FORM") {
+              e.preventDefault();
+              e.stopPropagation();
+              console.log("⚠️ Enter key form submit prevented");
+              break;
+            }
+            el = el.parentElement;
+          }
+        }
+      },
+      true
+    );
+
+    // Prevent iOS Safari pull-to-refresh overscroll
+    window.addEventListener('touchmove', function (e) {
+      if (window.scrollY === 0 && e.touches && e.touches[0] && e.touches[0].clientY > 0) {
+        e.preventDefault();
+      }
+    }, { passive: false });
+
     // Log page unload attempts
     window.addEventListener("beforeunload", (e) => {
       console.log("⚠️ PAGE IS TRYING TO RELOAD!");
@@ -418,59 +446,42 @@ const App = {
         width: 100vw;
         height: 100vh;
         z-index: 100010;
-        try {
-          console.log("=== SHOWRESULT (iPhone Safe) ===");
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 1rem;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+        opacity: 0;
+        transition: opacity 0.25s ease;
+        will-change: opacity, transform;
+        transform: translateZ(0);
+      `
+      );
 
-          // Log memory usage before showing result
-          if (performance && performance.memory) {
-            var mem = performance.memory;
-            var usedMB = (mem.usedJSHeapSize / 1048576).toFixed(2);
-            var totalMB = (mem.totalJSHeapSize / 1048576).toFixed(2);
-            var limitMB = (mem.jsHeapSizeLimit / 1048576).toFixed(2);
-            console.log(
-              "[SHOWRESULT] Before overlay: " +
-                usedMB +
-                " MB used / " +
-                totalMB +
-                " MB total (limit: " +
-                limitMB +
-                " MB)"
-            );
-          }
+      resultScreen.innerHTML = this.createResultHTML(item);
 
-          // Support confettiDelay option
-          let confettiDelay = 1200;
-          if (arguments.length > 1 && typeof arguments[1] === 'object' && arguments[1].confettiDelay !== undefined) {/* Lines 379-380 omitted */}
+      document.body.appendChild(resultScreen);
 
-          const spinnerScreen = this.spinnerScreen;
-          const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+      // Prevent double-tap zoom and unwanted scroll on iOS
+      resultScreen.addEventListener('touchstart', function(e) {
+        if (e.touches.length > 1) {
+          e.preventDefault();
+        }
+      }, { passive: false });
 
-          // Instead of changing spinnerScreen opacity, add a lightweight overlay
-          let overlay = document.createElement('div');
-          overlay.id = 'resultOverlayBg';
-          overlay.setAttribute('style', [
-            'position: fixed',
-            'inset: 0',
-            'width: 100vw',
-            'height: 100vh',
-            'background: rgba(0,0,0,0.65)',
-            'z-index: 100009',
-            'pointer-events: none',
-            'transition: opacity 0.25s ease',
-            'opacity: 0',
-            'will-change: opacity'
-          ].join(';') + ';');
-          document.body.appendChild(overlay);
-          // Fade in overlay
-          requestAnimationFrame(() => {/* Lines 403-404 omitted */});
+      // --- FORCE iPhone to repaint the element ---
+      // Use double requestAnimationFrame for iOS reliability
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          resultScreen.style.opacity = "1";
+          // Trigger confetti after confettiDelay ms (modal is visible)
+          setTimeout(() => this.triggerConfetti(isIOS), confettiDelay);
+        });
+      });
 
-          if (spinnerScreen) {/* Lines 407-408 omitted */}
-
-          // Create the result screen
-          const resultScreen = document.createElement("div");
-          resultScreen.id = "resultScreen";
-          /* Lines 413-487 omitted */
-        } catch (err) {/* Lines 488-489 omitted */}
+      // --- SAFER event handling using delegation ---
+      resultScreen.addEventListener("click", (e) => {
         const id = e.target.id || e.target.closest("button")?.id || "";
 
         if (id === "tryAgainBtnFS") {
