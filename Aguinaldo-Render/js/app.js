@@ -348,6 +348,12 @@ const App = {
     try {
       console.log("=== SHOWRESULT (iPhone Safe) ===");
 
+      // Support confettiDelay option
+      let confettiDelay = 1200;
+      if (arguments.length > 1 && typeof arguments[1] === 'object' && arguments[1].confettiDelay !== undefined) {
+        confettiDelay = arguments[1].confettiDelay;
+      }
+
       const spinnerScreen = this.spinnerScreen;
       const isIOS =
         /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
@@ -359,7 +365,6 @@ const App = {
         }
         spinnerScreen.style.pointerEvents = "none";
       }
-
 
       // Create the result screen
       const resultScreen = document.createElement("div");
@@ -405,8 +410,8 @@ const App = {
       requestAnimationFrame(() => {
         requestAnimationFrame(() => {
           resultScreen.style.opacity = "1";
-          // Trigger confetti after 3.5 seconds (modal is visible)
-          setTimeout(() => this.triggerConfetti(isIOS), 3500);
+          // Trigger confetti after confettiDelay ms (modal is visible)
+          setTimeout(() => this.triggerConfetti(isIOS), confettiDelay);
         });
       });
 
