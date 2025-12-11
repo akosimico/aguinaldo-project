@@ -202,17 +202,16 @@
         top: 5%;
         left: 50%;
         transform: translateY(-50%) translateX(-50%);
-        width: 6px; /* a bit thicker to show stripes */
+        width: 6px;
         height: 80px;
         background: repeating-linear-gradient(
           45deg,
-          /* diagonal stripes */ #ff0000,
-          /* red stripe */ #ff0000 4px,
+          #ff0000,
+          #ff0000 4px,
           #ffffff 4px,
-          /* white stripe starts */ #ffffff 8px
-            /* white stripe ends, next red begins */
+          #ffffff 8px
         );
-        border-radius: 3px; /* optional, for smooth edges */
+        border-radius: 3px;
         pointer-events: none;
         z-index: 10;
         box-shadow: 0 0 10px rgba(255, 0, 0, 0.7),
@@ -220,7 +219,6 @@
       }
 
       /* Modal Styles */
-      /* Modal Styles - Increase z-index */
       .modal {
         display: none;
         position: fixed;
@@ -229,7 +227,7 @@
         width: 100%;
         height: 100%;
         background: rgba(0, 0, 0, 0.8);
-        z-index: 2000; /* INCREASED from 1000 */
+        z-index: 2000;
         align-items: center;
         justify-content: center;
         opacity: 0;
@@ -239,7 +237,7 @@
       .modal.active {
         display: flex !important;
         opacity: 1;
-        pointer-events: auto; /* ADD THIS */
+        pointer-events: auto;
       }
 
       .modal-content {
@@ -253,7 +251,7 @@
         transform: scale(0.9);
         transition: transform 0.3s ease;
         position: relative;
-        z-index: 2001; /* ADD THIS */
+        z-index: 2001;
       }
 
       /* Mobile responsive styles for small phones */
@@ -264,84 +262,12 @@
           padding: 1.5rem;
           border-radius: 20px;
         }
-
-        #resultModal .modal-content {
-          padding: 1rem 1.5rem;
-        }
-
-        #resultModal .text-6xl {
-          font-size: 3rem;
-        }
-
-        #resultModal h2 {
-          font-size: 1.75rem;
-          line-height: 1.2;
-        }
-
-        #resultModal #resultAmount {
-          font-size: 3.5rem;
-          line-height: 1.2;
-        }
-
-        #resultModal .text-gray-600 {
-          font-size: 0.95rem;
-        }
-
-        #resultModal .flex.gap-3 {
-          flex-direction: column;
-          gap: 0.75rem;
-        }
-
-        #resultModal button {
-          padding: 0.75rem 1rem;
-          font-size: 0.9rem;
-        }
-
-        #resultModal p {
-          font-size: 0.95rem;
-        }
       }
 
       @media (max-width: 380px) {
         .modal-content {
           max-height: 80vh;
           padding: 1rem;
-        }
-
-        #resultModal .modal-content {
-          padding: 0.875rem 1.25rem;
-        }
-
-        #resultModal .text-6xl {
-          font-size: 2.5rem;
-          margin-bottom: 1rem;
-        }
-
-        #resultModal h2 {
-          font-size: 1.5rem;
-          margin-bottom: 0.75rem;
-        }
-
-        #resultModal #resultAmount {
-          font-size: 3rem;
-          margin: 0.5rem 0;
-        }
-
-        #resultModal .space-y-2 {
-          gap: 0.5rem;
-        }
-
-        #resultModal .space-y-6 {
-          gap: 1rem;
-        }
-
-        #resultModal button {
-          padding: 0.625rem 0.875rem;
-          font-size: 0.875rem;
-        }
-
-        #resultModal .rarity-badge {
-          font-size: 0.875rem;
         }
       }
 
@@ -367,12 +293,12 @@
 
       /* Confetti Animation */
       .confetti {
-        position: fixed; /* CHANGED from absolute */
+        position: fixed;
         width: 10px;
         height: 10px;
         background: var(--primary);
-        top: -10px; /* ADD THIS - Start from top */
-        animation: confetti-fall 3s linear forwards; /* ADD forwards */
+        top: -10px;
+        animation: confetti-fall 3s linear forwards;
         z-index: 9999;
         pointer-events: none;
       }
@@ -491,21 +417,7 @@
             merry and full of surprises ✨
           </p>
         </div>
-        <!-- Add this temporarily to your landing screen -->
-        <!-- <button
-          onclick="App.showResult({value: 'TEST', rarity: 'common'})"
-          style="
-            position: fixed;
-            top: 10px;
-            right: 10px;
-            z-index: 9999;
-            background: red;
-            color: white;
-            padding: 10px;
-          "
-        >
-          TEST MODAL
-        </button> -->
+
         <!-- Get Aguinaldo Button -->
         <button
           id="getAguinaldoBtn"
@@ -513,24 +425,7 @@
         >
           🎁 Get My Aguinaldo
         </button>
-        <!-- Add this button to your landing screen in index.html -->
-        <button
-          onclick="App.showResult({value: '₱1000', rarity: 'common'})"
-          style="
-            position: fixed;
-            top: 10px;
-            left: 10px;
-            z-index: 9999;
-            background: blue;
-            color: white;
-            padding: 10px;
-            border: none;
-            border-radius: 8px;
-            font-weight: bold;
-          "
-        >
-          TEST RESULT
-        </button>
+
         <!-- Settings Button -->
         <button
           id="settingsBtn"
@@ -545,12 +440,6 @@
         <span>&copy; 2025 ako si mico</span>
       </footer>
     </div>
-    <script>
-      (function () {
-        var y = document.getElementById("year");
-        if (y) y.textContent = new Date().getFullYear();
-      })();
-    </script>
 
     <!-- Spinner Screen -->
     <div
@@ -611,40 +500,6 @@
         </button>
       </div>
     </div>
-
-    <!-- Result Modal -->
-    <!-- <div id="resultModal" class="modal">
-      <div
-        class="modal-content text-center space-y-6 relative"
-        onclick="event.stopPropagation()"
-      >
-        <div class="text-6xl">🎉</div>
-        <h2 class="text-3xl font-bold text-gray-800">Congratulations!</h2>
-        <div class="space-y-2">
-          <p class="text-gray-600">You received</p>
-          <div
-            id="resultAmount"
-            class="text-6xl font-bold text-green-600"
-          ></div>
-          <div id="resultRarity" class="inline-block rarity-badge"></div>
-        </div>
-        <p class="text-gray-500 italic">Merry Christmas! 🎄</p>
-        <div class="flex gap-3">
-          <button
-            id="tryAgainBtn"
-            class="flex-1 py-3 px-6 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-xl transition-all"
-          >
-            Try Again
-          </button>
-          <button
-            id="closeResultBtn"
-            class="flex-1 py-3 px-6 bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold rounded-xl transition-all"
-          >
-            Back to Home
-          </button>
-        </div>
-      </div>
-    </div> -->
 
     <!-- Settings Modal -->
     <div id="settingsModal" class="modal">
@@ -752,9 +607,217 @@
       <span id="toastMessage"></span>
     </div>
 
+    <!-- Debug Overlay Toggle -->
+    <button
+      id="debugToggle"
+      style="
+        position: fixed;
+        bottom: 10px;
+        right: 10px;
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        background: rgba(255, 0, 0, 0.8);
+        color: white;
+        border: 2px solid white;
+        font-size: 20px;
+        font-weight: bold;
+        z-index: 99999;
+        cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+      "
+    >
+      🐛
+    </button>
+
+    <div
+      id="debugOverlay"
+      style="
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.95);
+        z-index: 99998;
+        overflow-y: auto;
+        padding: 60px 10px 10px 10px;
+        color: #0f0;
+        font-family: monospace;
+        font-size: 11px;
+        -webkit-overflow-scrolling: touch;
+      "
+    ></div>
+
     <script src="js/storage.js"></script>
     <script src="js/items.js"></script>
     <script src="js/spinner.js"></script>
     <script src="js/app.js"></script>
+
+    <script>
+      (function () {
+        const debugToggle = document.getElementById("debugToggle");
+        const debugOverlay = document.getElementById("debugOverlay");
+        let logs = [];
+
+        function addLog(type, message) {
+          const time = new Date().toLocaleTimeString("en-US", {
+            hour12: false,
+            hour: "2-digit",
+            minute: "2-digit",
+            second: "2-digit",
+          });
+
+          const logEntry = `[${time}] ${type}: ${message}`;
+          logs.push(logEntry);
+
+          if (logs.length > 200) {
+            logs.shift();
+          }
+
+          if (debugOverlay.style.display === "block") {
+            updateOverlay();
+          }
+        }
+
+        function updateOverlay() {
+          debugOverlay.innerHTML = `
+            <div style="position: fixed; top: 10px; left: 10px; right: 10px; display: flex; gap: 10px; z-index: 99999;">
+              <button onclick="document.getElementById('debugOverlay').style.display='none'" style="
+                flex: 1;
+                padding: 10px;
+                background: #f00;
+                color: white;
+                border: none;
+                border-radius: 5px;
+                font-weight: bold;
+              ">Close</button>
+              <button onclick="copyLogsToClipboard()" style="
+                flex: 1;
+                padding: 10px;
+                background: #0f0;
+                color: black;
+                border: none;
+                border-radius: 5px;
+                font-weight: bold;
+              ">Copy Logs</button>
+              <button onclick="clearDebugLogs()" style="
+                flex: 1;
+                padding: 10px;
+                background: #ff0;
+                color: black;
+                border: none;
+                border-radius: 5px;
+                font-weight: bold;
+              ">Clear</button>
+            </div>
+            <pre style="margin-top: 50px; white-space: pre-wrap; word-wrap: break-word; font-size: 10px; line-height: 1.4;">${logs.join(
+              "\n"
+            )}</pre>
+          `;
+        }
+
+        window.copyLogsToClipboard = function () {
+          const logText = logs.join("\n");
+
+          const textarea = document.createElement("textarea");
+          textarea.value = logText;
+          textarea.style.cssText =
+            "position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 100000;";
+          document.body.appendChild(textarea);
+          textarea.select();
+
+          try {
+            document.execCommand("copy");
+            alert("Logs copied! Paste them in a message to send.");
+          } catch (err) {
+            alert("Copy failed. Use the text area to manually copy.");
+          }
+
+          setTimeout(() => textarea.remove(), 3000);
+        };
+
+        window.clearDebugLogs = function () {
+          logs = [];
+          updateOverlay();
+        };
+
+        debugToggle.addEventListener("click", () => {
+          debugOverlay.style.display =
+            debugOverlay.style.display === "none" ? "block" : "none";
+          if (debugOverlay.style.display === "block") {
+            updateOverlay();
+          }
+        });
+
+        // Intercept console
+        const originalLog = console.log;
+        const originalError = console.error;
+        const originalWarn = console.warn;
+
+        console.log = function (...args) {
+          originalLog.apply(console, args);
+          addLog(
+            "LOG",
+            args
+              .map((a) => {
+                if (typeof a === "object") {
+                  try {
+                    return JSON.stringify(a);
+                  } catch (e) {
+                    return String(a);
+                  }
+                }
+                return String(a);
+              })
+              .join(" ")
+          );
+        };
+
+        console.error = function (...args) {
+          originalError.apply(console, args);
+          addLog(
+            "ERROR",
+            args
+              .map((a) => {
+                if (a instanceof Error) {
+                  return `${a.message}\n${a.stack}`;
+                }
+                if (typeof a === "object") {
+                  try {
+                    return JSON.stringify(a);
+                  } catch (e) {
+                    return String(a);
+                  }
+                }
+                return String(a);
+              })
+              .join(" ")
+          );
+        };
+
+        console.warn = function (...args) {
+          originalWarn.apply(console, args);
+          addLog("WARN", args.map((a) => String(a)).join(" "));
+        };
+
+        window.addEventListener("error", (e) => {
+          addLog(
+            "ERROR",
+            `${e.message} at ${e.filename}:${e.lineno}:${e.colno}`
+          );
+        });
+
+        window.addEventListener("unhandledrejection", (e) => {
+          addLog("ERROR", `Promise rejection: ${e.reason}`);
+        });
+
+        console.log(
+          "Debug overlay ready! Tap the red bug button to view logs."
+        );
+      })();
+    </script>
   </body>
 </html>
