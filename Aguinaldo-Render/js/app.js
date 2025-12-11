@@ -673,6 +673,24 @@ const App = {
         to {
           opacity: 1;
           transform: translateY(0) scale(1);
+          // Log memory usage if available
+          if (performance && performance.memory) {
+            var mem = performance.memory;
+            var usedMB = (mem.usedJSHeapSize / 1048576).toFixed(2);
+            var totalMB = (mem.totalJSHeapSize / 1048576).toFixed(2);
+            var limitMB = (mem.jsHeapSizeLimit / 1048576).toFixed(2);
+            console.log(
+              "Memory usage: " +
+                usedMB +
+                " MB used / " +
+                totalMB +
+                " MB total (limit: " +
+                limitMB +
+                " MB)"
+            );
+          } else {
+            console.log("Memory usage info not available in this browser.");
+          }
         }
       }
 
