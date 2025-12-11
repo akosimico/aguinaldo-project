@@ -61,7 +61,6 @@ const App = {
       console.log("=== App initialized successfully ===");
     } catch (error) {
       console.error("App initialization error:", error);
-      alert("Failed to initialize app: " + error.message);
     }
   },
 
@@ -98,13 +97,11 @@ const App = {
       // Allow tapping anywhere on spinner screen to stop
       if (this.spinnerScreen) {
         this.spinnerScreen.addEventListener("click", (e) => {
-          // Check if result screen is open
           if (document.getElementById("resultScreen")) {
             console.log("Result screen is open, ignoring spinner click");
             return;
           }
 
-          // Also ignore if spinner is not spinning
           if (!Spinner.isSpinning) {
             return;
           }
@@ -246,8 +243,12 @@ const App = {
   // Show landing screen
   showLanding() {
     try {
-      this.landingScreen.classList.remove("hidden");
-      this.spinnerScreen.classList.add("hidden");
+      if (this.landingScreen) {
+        this.landingScreen.classList.remove("hidden");
+      }
+      if (this.spinnerScreen) {
+        this.spinnerScreen.classList.add("hidden");
+      }
     } catch (error) {
       console.error("Error showing landing:", error);
     }
@@ -256,8 +257,12 @@ const App = {
   // Show spinner screen
   showSpinner() {
     try {
-      this.landingScreen.classList.add("hidden");
-      this.spinnerScreen.classList.remove("hidden");
+      if (this.landingScreen) {
+        this.landingScreen.classList.add("hidden");
+      }
+      if (this.spinnerScreen) {
+        this.spinnerScreen.classList.remove("hidden");
+      }
       
       const stopBtn = document.getElementById("stopSpinBtn");
       if (stopBtn) {
@@ -279,14 +284,14 @@ const App = {
       console.log("=== Creating result screen ===");
       console.log("Item:", JSON.stringify(item));
 
-      // Apply blur to spinner screen
+      // Apply blur to spinner screen if it exists
       if (this.spinnerScreen) {
         this.spinnerScreen.style.filter = "blur(10px)";
-        this.spinnerScreen.style.webkitFilter = "blur(10px)"; // iOS Safari
+        this.spinnerScreen.style.webkitFilter = "blur(10px)";
         this.spinnerScreen.style.pointerEvents = "none";
       }
 
-      // Hide other screens
+      // Hide other screens if they exist
       if (this.landingScreen) {
         this.landingScreen.style.display = "none";
       }
@@ -294,7 +299,7 @@ const App = {
         this.settingsModal.style.display = "none";
       }
 
-      // Create result screen HTML as string first
+      // Create result screen HTML
       const resultHTML = this.createResultHTML(item);
 
       // Create element
@@ -302,7 +307,7 @@ const App = {
       resultScreen.id = "resultScreen";
       resultScreen.innerHTML = resultHTML;
 
-      // Apply styles via setAttribute to avoid iOS style issues
+      // Apply styles
       resultScreen.setAttribute("style", `
         position: fixed;
         top: 0;
@@ -312,6 +317,8 @@ const App = {
         width: 100%;
         height: 100%;
         background: rgba(0, 0, 0, 0.6);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
         z-index: 10000;
         display: flex;
         align-items: center;
@@ -337,7 +344,9 @@ const App = {
           tryAgainBtn.onclick = () => {
             console.log("Try again clicked");
             this.closeResult();
-            this.showSpinner();
+            if (this.spinnerScreen) {
+              this.showSpinner();
+            }
           };
         }
 
@@ -345,7 +354,9 @@ const App = {
           backHomeBtn.onclick = () => {
             console.log("Back home clicked");
             this.closeResult();
-            this.showLanding();
+            if (this.landingScreen) {
+              this.showLanding();
+            }
           };
         }
       }, 100);
@@ -371,13 +382,14 @@ const App = {
       console.log("=== Result screen created successfully ===");
     } catch (error) {
       console.error("CRITICAL ERROR in showResult:", error);
-      alert("Error showing result: " + error.message);
-      // Fallback: try to show landing
-      this.showLanding();
+      // Fallback
+      if (this.landingScreen) {
+        this.showLanding();
+      }
     }
   },
 
-  // Create result HTML (separated for better error handling)
+  // Create result HTML (responsive version)
   createResultHTML(item) {
     const rarityGradient = this.getRarityGradient(item.rarity);
     
@@ -385,17 +397,16 @@ const App = {
       <div style="
         background: white;
         border-radius: 20px;
-        padding: 1.5rem;
-        max-width: 95%;
-        width: 100%;
+        padding: clamp(1.25rem, 5vw, 2.5rem) clamp(1rem, 4vw, 2rem);
         max-width: 420px;
+        width: 100%;
         text-align: center;
         box-shadow: 0 20px 40px rgba(0,0,0,0.3);
         margin: auto;
       ">
         <!-- Celebration Icon -->
-        <div style="margin-bottom: 1rem;">
-          <svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="display: inline-block;">
+        <div style="margin-bottom: clamp(1rem, 3vw, 1.5rem);">
+          <svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="display: inline-block; max-width: 100%; height: auto;">
             <rect x="3" y="3" width="3" height="3" fill="#10B981" rx="0.5"/>
             <circle cx="19" cy="5" r="1.5" fill="#DC2626"/>
             <polygon points="7,19 9,19 8,21" fill="#F59E0B"/>
@@ -454,7 +465,7 @@ const App = {
           font-size: clamp(0.75rem, 2.5vw, 0.875rem);
           background: linear-gradient(135deg, ${rarityGradient});
           color: white;
-          margin-bottom: 1rem;
+          margin-bottom: clamp(1rem, 3vw, 1.5rem);
           box-shadow: 0 4px 12px rgba(0,0,0,0.15);
           letter-spacing: 0.5px;
         ">
@@ -469,10 +480,11 @@ const App = {
           gap: 0.5rem;
           color: #9ca3af;
           font-style: italic;
-          margin: 1rem 0 1.5rem 0;
+          margin: clamp(1rem, 3vw, 1.5rem) 0 clamp(1.5rem, 4vw, 2rem) 0;
           font-size: clamp(0.875rem, 3vw, 1rem);
+          flex-wrap: wrap;
         ">
-          <svg xmlns="http://www.w3.org/2000/svg" width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="flex-shrink: 0;">
+          <svg xmlns="http://www.w3.org/2000/svg" width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="flex-shrink: 0; max-width: 50px; height: auto;">
             <path d="M12 2 L16 8 L14 8 L18 14 L6 14 L10 8 L8 8 Z" fill="#059669" stroke="#047857" stroke-width="1.5"/>
             <polygon points="12,1 12.5,2.5 14,3 12.5,3.5 12,5 11.5,3.5 10,3 11.5,2.5" fill="#FBBF24" stroke="#F59E0B" stroke-width="0.5"/>
             <rect x="10.5" y="14" width="3" height="3" rx="0.5" fill="#7C4A2A" stroke="#5C3A1A"/>
@@ -488,10 +500,10 @@ const App = {
           display: flex;
           flex-direction: column;
           gap: 0.75rem;
-          margin-top: 1.5rem;
+          margin-top: clamp(1rem, 3vw, 1.5rem);
         ">
           <button id="tryAgainBtnFS" type="button" style="
-            padding: 0.875rem 1.5rem;
+            padding: clamp(0.75rem, 2.5vw, 1rem) 1.5rem;
             background: linear-gradient(135deg, #10b981 0%, #059669 100%);
             color: white;
             border: none;
@@ -507,6 +519,7 @@ const App = {
             gap: 0.5rem;
             width: 100%;
             -webkit-tap-highlight-color: transparent;
+            min-height: 44px;
           ">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <polyline points="20 12 20 22 4 22 4 12"/>
@@ -518,7 +531,7 @@ const App = {
             <span>Try Again</span>
           </button>
           <button id="backHomeBtnFS" type="button" style="
-            padding: 0.875rem 1.5rem;
+            padding: clamp(0.75rem, 2.5vw, 1rem) 1.5rem;
             background: #f3f4f6;
             color: #374151;
             border: none;
@@ -533,6 +546,7 @@ const App = {
             gap: 0.5rem;
             width: 100%;
             -webkit-tap-highlight-color: transparent;
+            min-height: 44px;
           ">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
@@ -586,16 +600,11 @@ const App = {
         #resultScreen {
           padding: 0.75rem !important;
         }
-        
-        #resultScreen > div {
-          padding: 1.25rem !important;
-          border-radius: 16px !important;
-        }
       }
 
       @media (max-width: 360px) {
-        #resultScreen > div {
-          padding: 1rem !important;
+        #resultScreen {
+          padding: 0.5rem !important;
         }
       }
     `;
@@ -628,7 +637,9 @@ const App = {
         }, 300);
       }
 
-      Spinner.reset();
+      if (typeof Spinner !== 'undefined' && Spinner.reset) {
+        Spinner.reset();
+      }
     } catch (error) {
       console.error("Error closing result:", error);
     }
