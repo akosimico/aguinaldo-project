@@ -405,8 +405,8 @@ const App = {
       requestAnimationFrame(() => {
         requestAnimationFrame(() => {
           resultScreen.style.opacity = "1";
-          // Trigger confetti only after modal is visible
-          setTimeout(() => this.triggerConfetti(isIOS), 100);
+          // Trigger confetti after 3.5 seconds (modal is visible)
+          setTimeout(() => this.triggerConfetti(isIOS), 3500);
         });
       });
 
