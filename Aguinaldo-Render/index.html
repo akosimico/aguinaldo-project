@@ -6,6 +6,12 @@
       name="viewport"
       content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
     />
+    <!-- iOS Web App Meta Tags -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="format-detection" content="telephone=no">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#10b981">
     <title>Aguinaldo Randomizer - Merry Christmas! 🎄</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
@@ -662,6 +668,27 @@
     <script src="js/app.js"></script>
 
     <script>
+      // Prevent double-tap to zoom and pull-to-refresh on iOS
+      document.addEventListener('touchstart', function preventZoom(e) {
+        if (e.touches.length > 1) {
+          e.preventDefault();
+        }
+      }, { passive: false });
+      let lastTouchEnd = 0;
+      document.addEventListener('touchend', function preventDoubleTap(e) {
+        const now = Date.now();
+        if (now - lastTouchEnd <= 300) {
+          e.preventDefault();
+        }
+        lastTouchEnd = now;
+      }, false);
+      // Prevent pull-to-refresh (overscroll) on iOS Safari
+      document.body.addEventListener('touchmove', function (e) {
+        if (window.scrollY === 0 && e.touches[0].clientY > 0) {
+          e.preventDefault();
+        }
+      }, { passive: false });
+
       (function () {
         const debugToggle = document.getElementById("debugToggle");
         const debugOverlay = document.getElementById("debugOverlay");
