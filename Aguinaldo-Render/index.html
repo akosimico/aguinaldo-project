@@ -661,6 +661,7 @@
         const debugToggle = document.getElementById("debugToggle");
         const debugOverlay = document.getElementById("debugOverlay");
         let logs = [];
+        let reloadAttempts = 0;
 
         function addLog(type, message) {
           const time = new Date().toLocaleTimeString("en-US", {
@@ -670,10 +671,11 @@
             second: "2-digit",
           });
 
-          const logEntry = `[${time}] ${type}: ${message}`;
+          const ms = Date.now() % 1000;
+          const logEntry = `[${time}.${ms}] ${type}: ${message}`;
           logs.push(logEntry);
 
-          if (logs.length > 200) {
+          if (logs.length > 300) {
             logs.shift();
           }
 
@@ -684,39 +686,39 @@
 
         function updateOverlay() {
           debugOverlay.innerHTML = `
-            <div style="position: fixed; top: 10px; left: 10px; right: 10px; display: flex; gap: 10px; z-index: 99999;">
-              <button onclick="document.getElementById('debugOverlay').style.display='none'" style="
-                flex: 1;
-                padding: 10px;
-                background: #f00;
-                color: white;
-                border: none;
-                border-radius: 5px;
-                font-weight: bold;
-              ">Close</button>
-              <button onclick="copyLogsToClipboard()" style="
-                flex: 1;
-                padding: 10px;
-                background: #0f0;
-                color: black;
-                border: none;
-                border-radius: 5px;
-                font-weight: bold;
-              ">Copy Logs</button>
-              <button onclick="clearDebugLogs()" style="
-                flex: 1;
-                padding: 10px;
-                background: #ff0;
-                color: black;
-                border: none;
-                border-radius: 5px;
-                font-weight: bold;
-              ">Clear</button>
-            </div>
-            <pre style="margin-top: 50px; white-space: pre-wrap; word-wrap: break-word; font-size: 10px; line-height: 1.4;">${logs.join(
-              "\n"
-            )}</pre>
-          `;
+        <div style="position: fixed; top: 10px; left: 10px; right: 10px; display: flex; gap: 10px; z-index: 99999;">
+          <button onclick="document.getElementById('debugOverlay').style.display='none'" style="
+            flex: 1;
+            padding: 10px;
+            background: #f00;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-weight: bold;
+          ">Close</button>
+          <button onclick="copyLogsToClipboard()" style="
+            flex: 1;
+            padding: 10px;
+            background: #0f0;
+            color: black;
+            border: none;
+            border-radius: 5px;
+            font-weight: bold;
+          ">Copy Logs</button>
+          <button onclick="clearDebugLogs()" style="
+            flex: 1;
+            padding: 10px;
+            background: #ff0;
+            color: black;
+            border: none;
+            border-radius: 5px;
+            font-weight: bold;
+          ">Clear</button>
+        </div>
+        <pre style="margin-top: 50px; white-space: pre-wrap; word-wrap: break-word; font-size: 10px; line-height: 1.4;">${logs.join(
+          "\n"
+        )}</pre>
+      `;
         }
 
         window.copyLogsToClipboard = function () {
@@ -814,26 +816,93 @@
           addLog("ERROR", `Promise rejection: ${e.reason}`);
         });
 
-        // ===== NEW: CATCH PAGE RELOAD ATTEMPTS =====
-        window.addEventListener("beforeunload", (e) => {
-          addLog("ERROR", "🚨 PAGE IS RELOADING!!! 🚨");
-          console.trace();
+        // ===== NUCLEAR OPTION: INTERCEPT ALL NAVIGATION =====
 
-          // BLOCK THE RELOAD TEMPORARILY
-          e.preventDefault();
-          e.returnValue = "Debug: Blocking reload";
-          return "Debug: Blocking reload";
+        // Override window.location
+        let originalLocation = window.location.href;
+        let locationDescriptor = Object.getOwnPropertyDescriptor(
+          window,
+          "location"
+        );
+
+        // Prevent location changes
+        Object.defineProperty(window, "location", {
+          get: function () {
+            return {
+              href: originalLocation,
+              reload: function () {
+                addLog("ERROR", "🚨 window.location.reload() BLOCKED!");
+                console.trace();
+                reloadAttempts++;
+              },
+              replace: function (url) {
+                addLog(
+                  "ERROR",
+                  "🚨 window.location.replace() BLOCKED! URL: " + url
+                );
+                console.trace();
+                reloadAttempts++;
+              },
+              assign: function (url) {
+                addLog(
+                  "ERROR",
+                  "🚨 window.location.assign() BLOCKED! URL: " + url
+                );
+                console.trace();
+                reloadAttempts++;
+              },
+            };
+          },
+          set: function (val) {
+            addLog("ERROR", "🚨 window.location SET BLOCKED! Value: " + val);
+            console.trace();
+            reloadAttempts++;
+          },
         });
 
-        // ===== NEW: LOG ALL USER INTERACTIONS =====
-        let lastInteraction = { type: "none", target: "none", time: 0 };
+        // Block beforeunload
+        window.addEventListener(
+          "beforeunload",
+          (e) => {
+            addLog(
+              "ERROR",
+              "🚨 beforeunload FIRED! Attempts: " + reloadAttempts
+            );
+            console.trace();
+            e.preventDefault();
+            e.returnValue = "";
+            reloadAttempts++;
+            return "";
+          },
+          true
+        );
 
+        // Block unload
+        window.addEventListener(
+          "unload",
+          (e) => {
+            addLog("ERROR", "🚨 unload FIRED!");
+            console.trace();
+          },
+          true
+        );
+
+        // Block pagehide
+        window.addEventListener(
+          "pagehide",
+          (e) => {
+            addLog("ERROR", "🚨 pagehide FIRED!");
+            console.trace();
+          },
+          true
+        );
+
+        // ===== LOG ALL USER INTERACTIONS =====
         document.addEventListener(
           "click",
           (e) => {
-            const info = `Click: ${e.target.tagName} id="${e.target.id}" class="${e.target.className}"`;
-            lastInteraction = { type: "click", target: info, time: Date.now() };
-            addLog("LOG", "👆 " + info);
+            const info = `${e.target.tagName} id="${e.target.id}" class="${e.target.className}"`;
+            addLog("LOG", "👆 Click: " + info);
           },
           true
         );
@@ -841,47 +910,46 @@
         document.addEventListener(
           "touchend",
           (e) => {
-            const target = e.target || e.touches[0]?.target;
+            const target = e.target || e.changedTouches[0]?.target;
             if (target) {
-              const info = `Touch: ${target.tagName} id="${target.id}" class="${target.className}"`;
-              lastInteraction = {
-                type: "touch",
-                target: info,
-                time: Date.now(),
-              };
-              addLog("LOG", "👆 " + info);
+              const info = `${target.tagName} id="${target.id}" class="${target.className}"`;
+              addLog("LOG", "👆 Touch: " + info);
             }
           },
           true
         );
 
-        // ===== NEW: LOG NAVIGATION ATTEMPTS =====
+        // ===== LOG NAVIGATION ATTEMPTS =====
         const originalPushState = history.pushState;
         const originalReplaceState = history.replaceState;
 
         history.pushState = function (...args) {
-          addLog("ERROR", "⚠️ history.pushState called: " + args[2]);
+          addLog("ERROR", "⚠️ history.pushState: " + args[2]);
+          console.trace();
           return originalPushState.apply(history, args);
         };
 
         history.replaceState = function (...args) {
-          addLog("ERROR", "⚠️ history.replaceState called: " + args[2]);
+          addLog("ERROR", "⚠️ history.replaceState: " + args[2]);
+          console.trace();
           return originalReplaceState.apply(history, args);
         };
 
         window.addEventListener("popstate", (e) => {
-          addLog("ERROR", "⚠️ popstate event fired");
+          addLog("ERROR", "⚠️ popstate fired");
+          console.trace();
         });
 
         window.addEventListener("hashchange", (e) => {
-          addLog("ERROR", "⚠️ hashchange event fired");
+          addLog("ERROR", "⚠️ hashchange fired");
+          console.trace();
         });
 
-        // ===== NEW: CATCH FORM SUBMISSIONS =====
+        // ===== CATCH FORM SUBMISSIONS =====
         document.addEventListener(
           "submit",
           (e) => {
-            addLog("ERROR", "🚨 FORM SUBMISSION DETECTED! 🚨");
+            addLog("ERROR", "🚨 FORM SUBMIT BLOCKED!");
             console.trace();
             e.preventDefault();
             e.stopPropagation();
@@ -890,9 +958,33 @@
           true
         );
 
+        // Monitor setTimeout and setInterval calls
+        const originalSetTimeout = window.setTimeout;
+        const originalSetInterval = window.setInterval;
+
+        window.setTimeout = function (fn, delay, ...args) {
+          addLog("LOG", `⏰ setTimeout scheduled: ${delay}ms`);
+          return originalSetTimeout(fn, delay, ...args);
+        };
+
+        window.setInterval = function (fn, delay, ...args) {
+          addLog("LOG", `⏰ setInterval scheduled: ${delay}ms`);
+          return originalSetInterval(fn, delay, ...args);
+        };
+
+        // Check for redirect meta tags
+        const metaTags = document.querySelectorAll("meta[http-equiv]");
+        metaTags.forEach((meta) => {
+          if (meta.httpEquiv.toLowerCase() === "refresh") {
+            addLog("ERROR", "🚨 META REFRESH TAG FOUND: " + meta.content);
+            meta.remove();
+          }
+        });
+
         console.log(
-          "Debug overlay ready! Tap the red bug button to view logs."
+          "🐛 Debug overlay ready! ALL reload attempts will be logged and BLOCKED."
         );
+        addLog("LOG", "Debug system initialized - reload protection ACTIVE");
       })();
     </script>
   </body>
