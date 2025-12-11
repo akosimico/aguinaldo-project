@@ -235,6 +235,10 @@ const App = {
       "inline-block rarity-badge " + ItemManager.getRarityClass(item.rarity);
 
     this.resultModal.classList.add("active");
+    // Force inline display to help some iOS/Safari instances repaint fixed elements
+    this.resultModal.style.display = 'flex';
+    // Force reflow
+    void this.resultModal.offsetHeight;
 
     // Restore the spin button state when result modal opens
     const stopBtn = document.getElementById("stopSpinBtn");
@@ -255,6 +259,8 @@ const App = {
   // Close result modal
   closeResult() {
     this.resultModal.classList.remove("active");
+    // Hide explicitly for iOS compatibility
+    this.resultModal.style.display = 'none';
     // Only reset spinner when closing result
     Spinner.reset();
   },
@@ -264,11 +270,14 @@ const App = {
     ItemManager.renderItemsList();
     this.clearItemForm();
     this.settingsModal.classList.add("active");
+    this.settingsModal.style.display = 'flex';
+    void this.settingsModal.offsetHeight;
   },
 
   // Close settings modal
   closeSettings() {
     this.settingsModal.classList.remove("active");
+    this.settingsModal.style.display = 'none';
     this.clearItemForm();
   },
 
@@ -335,11 +344,14 @@ const App = {
     document.getElementById("confirmMessage").textContent = message;
     this.confirmCallback = callback;
     this.confirmModal.classList.add("active");
+    this.confirmModal.style.display = 'flex';
+    void this.confirmModal.offsetHeight;
   },
 
   // Close confirmation modal
   closeConfirm() {
     this.confirmModal.classList.remove("active");
+    this.confirmModal.style.display = 'none';
     this.confirmCallback = null;
   },
 
