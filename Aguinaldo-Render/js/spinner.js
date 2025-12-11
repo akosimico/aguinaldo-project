@@ -8,11 +8,53 @@ const Spinner = {
   velocity: 0,
   selectedItem: null,
   spinnerItems: [],
+  tickSound: null, // ADD THIS
+  lastTickPosition: 0, // ADD THIS
 
   // Initialize spinner
   init() {
     this.track = document.getElementById("spinnerTrack");
     this.items = ItemManager.getAllItems();
+
+    // Initialize tick sound using Web Audio API
+    this.initTickSound(); // ADD THIS
+  },
+
+  // ADD THIS METHOD - Create tick sound
+  initTickSound() {
+    try {
+      this.audioContext = new (window.AudioContext ||
+        window.webkitAudioContext)();
+    } catch (e) {
+      console.log("Audio not supported:", e);
+    }
+  },
+
+  // ADD THIS METHOD - Play tick sound
+  playTick() {
+    if (!this.audioContext) return;
+
+    try {
+      const oscillator = this.audioContext.createOscillator();
+      const gainNode = this.audioContext.createGain();
+
+      oscillator.connect(gainNode);
+      gainNode.connect(this.audioContext.destination);
+
+      oscillator.type = "sine";
+      oscillator.frequency.setValueAtTime(800, this.audioContext.currentTime);
+
+      gainNode.gain.setValueAtTime(0.1, this.audioContext.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(
+        0.01,
+        this.audioContext.currentTime + 0.05
+      );
+
+      oscillator.start(this.audioContext.currentTime);
+      oscillator.stop(this.audioContext.currentTime + 0.05);
+    } catch (e) {
+      console.log("Tick sound error:", e);
+    }
   },
 
   // Weighted random selection
@@ -33,25 +75,19 @@ const Spinner = {
   // Generate spinner items array (duplicates for scrolling effect)
   generateSpinnerItems(selectedItem) {
     const spinnerItems = [];
-    const totalItems = 50; // Number of items to show in one cycle
-
-    // Create multiple cycles of items for infinite looping
-    const cycles = 25; // Repeat the pattern 25 times for seamless looping
+    const totalItems = 50;
+    const cycles = 25;
 
     for (let cycle = 0; cycle < cycles; cycle++) {
-      // Fill with random items
       for (let i = 0; i < totalItems; i++) {
         if (
           cycle === Math.floor(cycles / 2) &&
           i === Math.floor(totalItems * 0.75)
         ) {
-          // Place the selected item at 75% position in the middle cycle
           spinnerItems.push({ ...selectedItem, isSelected: true });
         } else {
-          // Add random items, with rare items always appearing before the selected one
           let item;
 
-          // Always show rare items before the selected item (for excitement)
           if (
             cycle === Math.floor(cycles / 2) &&
             i > Math.floor(totalItems * 0.6) &&
@@ -113,7 +149,8 @@ const Spinner = {
 
     // Reset position and velocity
     this.currentPosition = 0;
-    this.velocity = 12; // Slower velocity for better visual appeal
+    this.velocity = 12;
+    this.lastTickPosition = 0; // ADD THIS
 
     // Start animation
     this.animate();
@@ -128,7 +165,6 @@ const Spinner = {
   stop() {
     if (!this.isSpinning) return;
 
-    // Stop the spinning animation immediately
     this.isSpinning = false;
     this.velocity = 0;
 
@@ -137,27 +173,22 @@ const Spinner = {
       this.animationFrame = null;
     }
 
-    // Calculate target position (center the selected item in viewport)
     const selectedIndex = this.spinnerItems.findIndex(
       (item) => item.isSelected
     );
-    const itemWidth = 170; // 150px width + 20px margin
+    const itemWidth = 170;
     const spinnerContainer = document.querySelector(".spinner-container");
     const containerWidth = spinnerContainer
       ? spinnerContainer.offsetWidth
       : window.innerWidth;
 
-    // Calculate the position to center the selected item at the red line (center of container)
-    // The red line is at the center of the spinner-container
-    // targetPosition moves the track so the selected item aligns with the red line
     const targetPosition = -(
       selectedIndex * itemWidth -
       containerWidth / 2 +
       itemWidth / 2
     );
 
-    // Calculate deceleration needed
-    const decelerationFrames = 180; // Slower deceleration (3 seconds at 60fps)
+    const decelerationFrames = 180;
 
     this.decelerateTo(targetPosition, decelerationFrames);
   },
@@ -176,12 +207,29 @@ const Spinner = {
         return;
       }
 
-      // Easing function (ease-out cubic)
       const progress = currentFrame / frames;
       const easeProgress = 1 - Math.pow(1 - progress, 3);
 
       this.currentPosition = startPosition + distance * easeProgress;
       this.track.style.transform = `translateX(${this.currentPosition}px)`;
+
+      // ADD THIS - Play tick sound based on position
+      const itemWidth = 170;
+      const currentItemIndex = Math.floor(
+        Math.abs(this.currentPosition) / itemWidth
+      );
+
+      if (currentItemIndex !== this.lastTickPosition) {
+        // Play tick less frequently as we slow down
+        const tickFrequency = Math.max(
+          1,
+          Math.floor((frames - currentFrame) / 30)
+        );
+        if (currentFrame % tickFrequency === 0) {
+          this.playTick();
+        }
+        this.lastTickPosition = currentItemIndex;
+      }
 
       currentFrame++;
       this.animationFrame = requestAnimationFrame(decelerate);
@@ -198,13 +246,21 @@ const Spinner = {
   animate() {
     if (!this.isSpinning) return;
 
-    // Update position
     this.currentPosition -= this.velocity;
 
-    // Apply transform
+    // ADD THIS - Play tick sound at intervals
+    const itemWidth = 170;
+    const currentItemIndex = Math.floor(
+      Math.abs(this.currentPosition) / itemWidth
+    );
+
+    if (currentItemIndex !== this.lastTickPosition) {
+      this.playTick();
+      this.lastTickPosition = currentItemIndex;
+    }
+
     this.track.style.transform = `translateX(${this.currentPosition}px)`;
 
-    // Continue animation
     this.animationFrame = requestAnimationFrame(() => this.animate());
   },
 
@@ -222,7 +278,6 @@ const Spinner = {
       navigator.vibrate([100, 50, 100]);
     }
 
-    // Find the item currently at the center (red line position)
     const spinnerContainer = document.querySelector(".spinner-container");
     const containerRect = spinnerContainer.getBoundingClientRect();
     const centerX = containerRect.left + containerRect.width / 2;
@@ -244,24 +299,59 @@ const Spinner = {
       }
     });
 
-    // Highlight the item at center
     if (closestItem) {
       closestItem.classList.add("selected-winner");
     }
 
-    // Use the item that's actually centered - that's what the user landed on
+    let winningItem;
     if (closestIndex >= 0 && closestIndex < this.spinnerItems.length) {
-      const actualItem = this.spinnerItems[closestIndex];
-
-      // Show result after a longer delay to see the selection clearly
-      setTimeout(() => {
-        App.showResult(actualItem);
-      }, 1500);
+      winningItem = this.spinnerItems[closestIndex];
     } else {
-      // Fallback to the stored selected item if something went wrong
-      setTimeout(() => {
-        App.showResult(this.selectedItem);
-      }, 1500);
+      winningItem = this.selectedItem;
+    }
+
+    // ADD THIS - Play winning sound
+    this.playWinSound();
+
+    setTimeout(() => {
+      App.showResult(winningItem);
+    }, 1500);
+  },
+
+  // ADD THIS METHOD - Play winning sound
+  playWinSound() {
+    if (!this.audioContext) return;
+
+    try {
+      // Play a celebratory chord
+      const frequencies = [523.25, 659.25, 783.99]; // C-E-G chord
+
+      frequencies.forEach((freq, index) => {
+        setTimeout(() => {
+          const oscillator = this.audioContext.createOscillator();
+          const gainNode = this.audioContext.createGain();
+
+          oscillator.connect(gainNode);
+          gainNode.connect(this.audioContext.destination);
+
+          oscillator.type = "sine";
+          oscillator.frequency.setValueAtTime(
+            freq,
+            this.audioContext.currentTime
+          );
+
+          gainNode.gain.setValueAtTime(0.2, this.audioContext.currentTime);
+          gainNode.gain.exponentialRampToValueAtTime(
+            0.01,
+            this.audioContext.currentTime + 0.5
+          );
+
+          oscillator.start(this.audioContext.currentTime);
+          oscillator.stop(this.audioContext.currentTime + 0.5);
+        }, index * 100);
+      });
+    } catch (e) {
+      console.log("Win sound error:", e);
     }
   },
 
@@ -272,6 +362,7 @@ const Spinner = {
     this.velocity = 0;
     this.selectedItem = null;
     this.spinnerItems = [];
+    this.lastTickPosition = 0; // ADD THIS
 
     if (this.animationFrame) {
       cancelAnimationFrame(this.animationFrame);
