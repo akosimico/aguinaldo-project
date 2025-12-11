@@ -226,8 +226,14 @@ const App = {
 
   // Show result modal
   showResult(item) {
+    console.log("Showing result for:", item); // Debug log
     const resultAmount = document.getElementById("resultAmount");
     const resultRarity = document.getElementById("resultRarity");
+
+    if (!resultAmount || !resultRarity) {
+      console.error("Result elements not found!");
+      return;
+    }
 
     resultAmount.textContent = item.value;
     resultRarity.textContent = item.rarity;
@@ -237,20 +243,10 @@ const App = {
     // iOS FIX: Remove 'active' class manipulation, use display directly
     this.resultModal.style.display = "flex";
 
-    // iOS FIX: Force body scroll lock
-    document.body.style.overflow = "hidden";
-    document.body.style.position = "fixed";
-    document.body.style.width = "100%";
-
-    // Force reflow - critical for iOS
-    void this.resultModal.offsetHeight;
-
-    // Add active class after display is set
-    setTimeout(() => {
+    requestAnimationFrame(() => {
       this.resultModal.classList.add("active");
-    }, 10);
+    });
 
-    // Restore the spin button state when result modal opens
     const stopBtn = document.getElementById("stopSpinBtn");
     if (stopBtn) {
       stopBtn.disabled = false;
@@ -270,17 +266,11 @@ const App = {
   closeResult() {
     this.resultModal.classList.remove("active");
 
-    // iOS FIX: Restore body scroll
-    document.body.style.overflow = "";
-    document.body.style.position = "";
-    document.body.style.width = "";
-
-    // Hide after transition
+    // Wait for fade animation before hiding
     setTimeout(() => {
       this.resultModal.style.display = "none";
     }, 300);
 
-    // Only reset spinner when closing result
     Spinner.reset();
   },
 
