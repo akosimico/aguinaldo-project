@@ -196,21 +196,30 @@
         }
       }
 
-      /* Selection Indicator */
+      /* Candy Cane Selection Indicator */
       .selection-indicator {
         position: absolute;
         top: 5%;
         left: 50%;
         transform: translateY(-50%) translateX(-50%);
-        width: 3px;
+        width: 6px; /* a bit thicker to show stripes */
         height: 80px;
-        background: #ffd700;
+        background: repeating-linear-gradient(
+          45deg,
+          /* diagonal stripes */ #ff0000,
+          /* red stripe */ #ff0000 4px,
+          #ffffff 4px,
+          /* white stripe starts */ #ffffff 8px
+            /* white stripe ends, next red begins */
+        );
+        border-radius: 3px; /* optional, for smooth edges */
         pointer-events: none;
         z-index: 10;
-        box-shadow: 0 0 12px #ffd700, 0 0 25px rgba(255, 215, 0, 0.4);
+        box-shadow: 0 0 10px rgba(255, 0, 0, 0.7),
+          0 0 20px rgba(255, 255, 255, 0.5);
       }
 
-      /* Modal Styles */
+      /* iOS Modal Fixes */
       .modal {
         display: none;
         position: fixed;
@@ -221,10 +230,14 @@
         background: rgba(0, 0, 0, 0.8);
         z-index: 1000;
         animation: fadeIn 0.3s ease;
+        /* iOS specific fixes */
+        -webkit-overflow-scrolling: touch;
+        overflow-y: auto;
+        overscroll-behavior: contain;
       }
 
       .modal.active {
-        display: flex;
+        display: flex !important;
         align-items: center;
         justify-content: center;
       }
@@ -238,6 +251,64 @@
         overflow-y: auto;
         animation: slideUp 0.3s ease;
         box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+        /* iOS fixes */
+        position: relative;
+        -webkit-overflow-scrolling: touch;
+        transform: translateZ(0);
+        -webkit-transform: translateZ(0);
+      }
+
+      /* Prevent body scroll when modal is open */
+      body.modal-open {
+        overflow: hidden !important;
+        position: fixed !important;
+        width: 100% !important;
+        height: 100% !important;
+      } /* iOS Modal Fixes */
+      .modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.8);
+        z-index: 1000;
+        animation: fadeIn 0.3s ease;
+        /* iOS specific fixes */
+        -webkit-overflow-scrolling: touch;
+        overflow-y: auto;
+        overscroll-behavior: contain;
+      }
+
+      .modal.active {
+        display: flex !important;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .modal-content {
+        background: white;
+        border-radius: 24px;
+        padding: 2rem;
+        max-width: 90%;
+        max-height: 90vh;
+        overflow-y: auto;
+        animation: slideUp 0.3s ease;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+        /* iOS fixes */
+        position: relative;
+        -webkit-overflow-scrolling: touch;
+        transform: translateZ(0);
+        -webkit-transform: translateZ(0);
+      }
+
+      /* Prevent body scroll when modal is open */
+      body.modal-open {
+        overflow: hidden !important;
+        position: fixed !important;
+        width: 100% !important;
+        height: 100% !important;
       }
 
       /* Mobile responsive styles for small phones */
@@ -561,7 +632,10 @@
 
     <!-- Result Modal -->
     <div id="resultModal" class="modal">
-      <div class="modal-content text-center space-y-6 relative" onclick="event.stopPropagation()">
+      <div
+        class="modal-content text-center space-y-6 relative"
+        onclick="event.stopPropagation()"
+      >
         <div class="text-6xl">🎉</div>
         <h2 class="text-3xl font-bold text-gray-800">Congratulations!</h2>
         <div class="space-y-2">
@@ -592,7 +666,10 @@
 
     <!-- Settings Modal -->
     <div id="settingsModal" class="modal">
-      <div class="modal-content custom-scrollbar space-y-6 w-full max-w-md" onclick="event.stopPropagation()">
+      <div
+        class="modal-content custom-scrollbar space-y-6 w-full max-w-md"
+        onclick="event.stopPropagation()"
+      >
         <div class="flex items-center justify-between">
           <h2 class="text-2xl font-bold text-gray-800">Manage Items</h2>
           <button
@@ -659,7 +736,10 @@
 
     <!-- Confirm Modal -->
     <div id="confirmModal" class="modal">
-      <div class="modal-content text-center space-y-4 max-w-sm" onclick="event.stopPropagation()">
+      <div
+        class="modal-content text-center space-y-4 max-w-sm"
+        onclick="event.stopPropagation()"
+      >
         <div class="text-4xl">⚠️</div>
         <h3 class="text-xl font-bold text-gray-800" id="confirmTitle">
           Are you sure?
