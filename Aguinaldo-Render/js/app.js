@@ -3,7 +3,6 @@ const App = {
   // DOM Elements
   landingScreen: null,
   spinnerScreen: null,
-  resultModal: null,
   settingsModal: null,
   confirmModal: null,
   toast: null,
@@ -32,21 +31,83 @@ const App = {
     `,
   },
 
+  // SVG Icons for result screen
+  resultIcons: {
+    celebration: `
+      <svg xmlns="http://www.w3.org/2000/svg" width="120" height="120" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <!-- Confetti pieces -->
+        <rect x="3" y="3" width="3" height="3" fill="#10B981" rx="0.5">
+          <animateTransform attributeName="transform" type="rotate" from="0 4.5 4.5" to="360 4.5 4.5" dur="3s" repeatCount="indefinite"/>
+        </rect>
+        <circle cx="19" cy="5" r="1.5" fill="#DC2626">
+          <animateTransform attributeName="transform" type="translate" values="0,0; 2,-2; 0,0" dur="2s" repeatCount="indefinite"/>
+        </circle>
+        <polygon points="7,19 9,19 8,21" fill="#F59E0B">
+          <animateTransform attributeName="transform" type="rotate" from="0 8 20" to="360 8 20" dur="4s" repeatCount="indefinite"/>
+        </polygon>
+        <circle cx="18" cy="18" r="1.5" fill="#8B5CF6">
+          <animateTransform attributeName="transform" type="scale" values="1;1.3;1" dur="1.5s" repeatCount="indefinite"/>
+        </circle>
+        
+        <!-- Gift box -->
+        <rect x="8" y="10" width="8" height="8" rx="1" fill="#DC2626" stroke="#DC2626" stroke-width="1.5"/>
+        <rect x="8" y="8" width="8" height="2" rx="0.5" fill="#059669" stroke="#059669" stroke-width="1.5"/>
+        <line x1="12" y1="8" x2="12" y2="18" stroke="#F59E0B" stroke-width="2"/>
+        <line x1="8" y1="14" x2="16" y2="14" stroke="#F59E0B" stroke-width="2"/>
+        
+        <!-- Ribbon bow -->
+        <path d="M 10 8 Q 9 6 10 5 Q 11 6 12 6 Q 13 6 14 5 Q 15 6 14 8" fill="#F59E0B" stroke="#F59E0B" stroke-width="1"/>
+      </svg>
+    `,
+    christmas: `
+      <svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        <!-- Christmas tree -->
+        <path d="M12 2 L16 8 L14 8 L18 14 L6 14 L10 8 L8 8 Z" fill="#059669" stroke="#047857" stroke-width="1.5"/>
+        
+        <!-- Star on top -->
+        <polygon points="12,1 12.5,2.5 14,3 12.5,3.5 12,5 11.5,3.5 10,3 11.5,2.5" fill="#FBBF24" stroke="#F59E0B" stroke-width="0.5"/>
+        
+        <!-- Trunk -->
+        <rect x="10.5" y="14" width="3" height="3" rx="0.5" fill="#7C4A2A" stroke="#5C3A1A"/>
+        
+        <!-- Ornaments -->
+        <circle cx="10" cy="10" r="0.8" fill="#DC2626"/>
+        <circle cx="14" cy="9" r="0.8" fill="#3B82F6"/>
+        <circle cx="12" cy="12" r="0.8" fill="#F59E0B"/>
+        
+        <!-- Snowflakes around -->
+        <g opacity="0.6">
+          <path d="M 3 5 L 3 7 M 2 6 L 4 6 M 2.5 5.5 L 3.5 6.5 M 3.5 5.5 L 2.5 6.5" stroke="#E0F2FE" stroke-width="0.5"/>
+          <path d="M 20 4 L 20 6 M 19 5 L 21 5 M 19.5 4.5 L 20.5 5.5 M 20.5 4.5 L 19.5 5.5" stroke="#E0F2FE" stroke-width="0.5"/>
+          <path d="M 19 17 L 19 19 M 18 18 L 20 18 M 18.5 17.5 L 19.5 18.5 M 19.5 17.5 L 18.5 18.5" stroke="#E0F2FE" stroke-width="0.5"/>
+        </g>
+      </svg>
+    `,
+    home: `
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+        <polyline points="9 22 9 12 15 12 15 22"/>
+      </svg>
+    `,
+    gift: `
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="20 12 20 22 4 22 4 12"/>
+        <rect x="2" y="7" width="20" height="5"/>
+        <line x1="12" y1="22" x2="12" y2="7"/>
+        <path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/>
+        <path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/>
+      </svg>
+    `,
+  },
+
   // Initialize app
   init() {
     // Get DOM elements
     this.landingScreen = document.getElementById("landingScreen");
     this.spinnerScreen = document.getElementById("spinnerScreen");
-    this.resultModal = document.getElementById("resultModal");
     this.settingsModal = document.getElementById("settingsModal");
     this.confirmModal = document.getElementById("confirmModal");
     this.toast = document.getElementById("toast");
-
-    // Check if critical elements exist
-    if (!this.resultModal) {
-      console.error("Result modal not found!");
-      return;
-    }
 
     // Initialize modules
     ItemManager.init();
@@ -82,15 +143,10 @@ const App = {
 
     // Allow tapping anywhere on spinner screen to stop
     this.spinnerScreen.addEventListener("click", (e) => {
-      // CRITICAL FIX: Don't handle clicks if ANY modal is open
-      const anyModalOpen =
-        this.resultModal.classList.contains("active") ||
-        this.settingsModal.classList.contains("active") ||
-        this.confirmModal.classList.contains("active");
-
-      if (anyModalOpen) {
-        console.log("Modal is open, ignoring spinner click");
-        return; // Exit early
+      // Check if result screen is open
+      if (document.getElementById("resultScreen")) {
+        console.log("Result screen is open, ignoring spinner click");
+        return;
       }
 
       // Also ignore if spinner is not spinning
@@ -107,17 +163,6 @@ const App = {
         }
         Spinner.stop();
       }
-    });
-
-    // Result modal buttons
-    document.getElementById("tryAgainBtn").addEventListener("click", () => {
-      this.closeResult();
-      this.showSpinner();
-    });
-
-    document.getElementById("closeResultBtn").addEventListener("click", () => {
-      this.closeResult();
-      this.showLanding();
     });
 
     // Settings modal buttons
@@ -147,17 +192,9 @@ const App = {
       this.closeConfirm();
     });
 
-    // Close modals when clicking outside
-    this.resultModal.addEventListener("click", (e) => {
-      e.stopPropagation(); // Prevent event bubbling
-      if (e.target === this.resultModal) {
-        this.closeResult();
-        this.showLanding();
-      }
-    });
-
+    // Close settings modal when clicking outside
     this.settingsModal.addEventListener("click", (e) => {
-      e.stopPropagation(); // Prevent event bubbling
+      e.stopPropagation();
       if (e.target === this.settingsModal) {
         this.closeSettings();
       }
@@ -248,42 +285,240 @@ const App = {
     }, 500);
   },
 
-  // Show result modal
+  // Show result as full-screen overlay with blurred spinner background
   showResult(item) {
-    console.log("=== showResult called ===");
+    console.log("=== Creating full-screen result ===");
     console.log("Item:", item);
 
-    const resultAmount = document.getElementById("resultAmount");
-    const resultRarity = document.getElementById("resultRarity");
-
-    if (!resultAmount || !resultRarity) {
-      console.error("Result elements not found!");
-      return;
-    }
-
-    // CRITICAL: Hide spinner screen FIRST to prevent iOS interference
-    this.spinnerScreen.style.visibility = "hidden";
+    // Apply blur to spinner screen instead of hiding it
+    this.spinnerScreen.style.filter = "blur(10px)";
     this.spinnerScreen.style.pointerEvents = "none";
 
-    // Set content
-    resultAmount.textContent = item.value;
-    resultRarity.textContent = item.rarity;
-    resultRarity.className =
-      "inline-block rarity-badge " + ItemManager.getRarityClass(item.rarity);
+    // Hide other screens
+    this.landingScreen.style.display = "none";
+    if (this.settingsModal) this.settingsModal.style.display = "none";
 
-    // Show modal
-    this.resultModal.style.display = "flex";
-    this.resultModal.style.zIndex = "2000";
-    this.resultModal.style.pointerEvents = "auto";
+    // Create full-screen result overlay
+    const resultScreen = document.createElement("div");
+    resultScreen.id = "resultScreen";
+    resultScreen.style.cssText = `
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      z-index: 10000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      animation: fadeIn 0.3s ease-out;
+    `;
 
-    // Force iOS to acknowledge the changes
-    void this.resultModal.offsetWidth;
-    void document.body.offsetWidth;
+    const rarityGradient = this.getRarityGradient(item.rarity);
+    const rarityClass = ItemManager.getRarityClass(item.rarity);
 
-    setTimeout(() => {
-      this.resultModal.classList.add("active");
-      console.log("Modal activated");
-    }, 100);
+    resultScreen.innerHTML = `
+      <div style="
+        background: white;
+        border-radius: 24px;
+        padding: 2.5rem 2rem;
+        max-width: 420px;
+        width: 100%;
+        text-align: center;
+        box-shadow: 0 25px 50px rgba(0,0,0,0.25);
+        animation: slideUpScale 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+        position: relative;
+      ">
+        <!-- Celebration Icon -->
+        <div style="margin-bottom: 1.5rem; display: flex; justify-content: center;">
+          ${this.resultIcons.celebration}
+        </div>
+
+        <!-- Title -->
+        <h2 style="
+          font-size: 2rem; 
+          font-weight: 800; 
+          color: #1f2937; 
+          margin-bottom: 0.75rem;
+          font-family: 'Poppins', sans-serif;
+          line-height: 1.2;
+        ">
+          Congratulations!
+        </h2>
+
+        <!-- Subtitle -->
+        <p style="
+          color: #6b7280; 
+          margin-bottom: 0.5rem;
+          font-size: 1rem;
+          font-weight: 500;
+        ">You received</p>
+
+        <!-- Amount -->
+        <div style="
+          font-size: 3.5rem; 
+          font-weight: 800; 
+          background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
+          margin: 1rem 0;
+          font-family: 'Poppins', sans-serif;
+          line-height: 1.2;
+        ">
+          ${item.value}
+        </div>
+
+        <!-- Rarity Badge -->
+        <div style="
+          display: inline-block;
+          padding: 8px 20px;
+          border-radius: 16px;
+          font-weight: 600;
+          text-transform: uppercase;
+          font-size: 0.875rem;
+          background: linear-gradient(135deg, ${rarityGradient});
+          color: white;
+          margin-bottom: 1.5rem;
+          box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+          letter-spacing: 0.5px;
+        ">
+          ${item.rarity}
+        </div>
+
+        <!-- Christmas Icon + Message -->
+        <div style="
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 0.5rem;
+          color: #9ca3af; 
+          font-style: italic; 
+          margin: 1.5rem 0 2rem 0;
+          font-size: 1rem;
+        ">
+          ${this.resultIcons.christmas}
+          <span>Merry Christmas!</span>
+        </div>
+
+        <!-- Action Buttons -->
+        <div style="
+          display: flex; 
+          flex-direction: column; 
+          gap: 0.75rem; 
+          margin-top: 1.5rem;
+        ">
+          <button id="tryAgainBtnFS" style="
+            padding: 1rem 1.5rem;
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            border: none;
+            border-radius: 14px;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-family: 'Poppins', sans-serif;
+            box-shadow: 0 4px 16px rgba(16, 185, 129, 0.4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+          ">
+            ${this.resultIcons.gift}
+            <span>Try Again</span>
+          </button>
+          <button id="backHomeBtnFS" style="
+            padding: 1rem 1.5rem;
+            background: #f3f4f6;
+            color: #374151;
+            border: none;
+            border-radius: 14px;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-family: 'Poppins', sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+          ">
+            ${this.resultIcons.home}
+            <span>Back to Home</span>
+          </button>
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(resultScreen);
+
+    // Add animation CSS if not already present
+    if (!document.getElementById("resultAnimationStyle")) {
+      const style = document.createElement("style");
+      style.id = "resultAnimationStyle";
+      style.textContent = `
+        @keyframes fadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+        
+        @keyframes slideUpScale {
+          from {
+            opacity: 0;
+            transform: scale(0.8) translateY(40px);
+          }
+          to {
+            opacity: 1;
+            transform: scale(1) translateY(0);
+          }
+        }
+
+        #tryAgainBtnFS:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 6px 20px rgba(16, 185, 129, 0.5);
+        }
+
+        #tryAgainBtnFS:active {
+          transform: translateY(0);
+        }
+
+        #backHomeBtnFS:hover {
+          background: #e5e7eb;
+          transform: translateY(-2px);
+        }
+
+        #backHomeBtnFS:active {
+          transform: translateY(0);
+        }
+
+        /* Mobile responsive */
+        @media (max-width: 480px) {
+          #resultScreen > div {
+            padding: 2rem 1.5rem !important;
+            max-width: 95% !important;
+          }
+        }
+      `;
+      document.head.appendChild(style);
+    }
+
+    // Event listeners
+    document.getElementById("tryAgainBtnFS").addEventListener("click", () => {
+      this.closeResult();
+      this.showSpinner();
+    });
+
+    document.getElementById("backHomeBtnFS").addEventListener("click", () => {
+      this.closeResult();
+      this.showLanding();
+    });
 
     // Restore the spin button state
     const stopBtn = document.getElementById("stopSpinBtn");
@@ -299,21 +534,44 @@ const App = {
     if (navigator.vibrate) {
       navigator.vibrate([200, 100, 200]);
     }
+
+    console.log("=== Full-screen result created ===");
   },
 
-  // Close result modal
+  // Close result screen
   closeResult() {
-    this.resultModal.classList.remove("active");
+    const resultScreen = document.getElementById("resultScreen");
+    if (resultScreen) {
+      // Fade out animation
+      resultScreen.style.opacity = "0";
+      resultScreen.style.transition = "opacity 0.3s ease";
 
-    // Wait for fade animation before hiding
-    setTimeout(() => {
-      this.resultModal.style.display = "none";
-      // Restore spinner screen visibility
-      this.spinnerScreen.style.visibility = "visible";
-      this.spinnerScreen.style.pointerEvents = "auto";
-    }, 300);
+      setTimeout(() => {
+        resultScreen.remove();
+
+        // Remove blur from spinner screen
+        this.spinnerScreen.style.filter = "none";
+        this.spinnerScreen.style.pointerEvents = "auto";
+
+        // Show appropriate screen
+        this.landingScreen.style.display = "";
+        this.spinnerScreen.style.display = "";
+      }, 300);
+    }
 
     Spinner.reset();
+  },
+
+  // Helper function for rarity gradients
+  getRarityGradient(rarity) {
+    switch (rarity) {
+      case "rare":
+        return "#9333ea 0%, #e91e63 100%";
+      case "uncommon":
+        return "#ea8a00 0%, #dc2626 100%";
+      default:
+        return "#10b981 0%, #059669 100%";
+    }
   },
 
   // Open settings modal
@@ -471,7 +729,7 @@ const App = {
         confetti.style.top = "-20px";
         confetti.style.left = startX + "%";
         confetti.style.background = color;
-        confetti.style.zIndex = "9999";
+        confetti.style.zIndex = "10001";
         confetti.style.pointerEvents = "none";
         confetti.style.borderRadius = shape === "circle" ? "50%" : "2px";
         confetti.style.opacity = "0.8";
