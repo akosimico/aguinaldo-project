@@ -82,12 +82,23 @@ const App = {
 
     // Allow tapping anywhere on spinner screen to stop
     this.spinnerScreen.addEventListener("click", (e) => {
-      // IMPORTANT: Don't handle clicks if modal is open
-      if (this.resultModal.classList.contains("active")) {
+      // CRITICAL FIX: Don't handle clicks if ANY modal is open
+      const anyModalOpen =
+        this.resultModal.classList.contains("active") ||
+        this.settingsModal.classList.contains("active") ||
+        this.confirmModal.classList.contains("active");
+
+      if (anyModalOpen) {
+        console.log("Modal is open, ignoring spinner click");
+        return; // Exit early
+      }
+
+      // Also ignore if spinner is not spinning
+      if (!Spinner.isSpinning) {
         return;
       }
 
-      if (e.target.id !== "stopSpinBtn" && Spinner.isSpinning) {
+      if (e.target.id !== "stopSpinBtn") {
         // Reflect disabled/spinning state on the footer button as well
         const stopBtn = document.getElementById("stopSpinBtn");
         if (stopBtn) {
@@ -260,12 +271,18 @@ const App = {
     // Show modal with proper sequence
     this.resultModal.style.display = "flex";
     this.resultModal.style.zIndex = "2000"; // Ensure it's on top
+    this.resultModal.style.pointerEvents = "auto"; // ADD THIS
 
     console.log("Modal display set to:", this.resultModal.style.display);
     console.log("Modal z-index:", this.resultModal.style.zIndex);
 
     // Force reflow
     void this.resultModal.offsetHeight;
+    // Use setTimeout instead of requestAnimationFrame for iOS
+    setTimeout(() => {
+      this.resultModal.classList.add("active");
+      console.log("Modal should be visible now");
+    }, 50); // Small delay for iOS
 
     // Add active class after a frame
     requestAnimationFrame(() => {
@@ -428,6 +445,11 @@ const App = {
 
   // Trigger confetti animation
   triggerConfetti() {
+    console.log("=== Confetti triggered ===");
+
+    // Play sound using Web Audio API
+    this.playConfettiSound();
+
     const colors = [
       "#10B981",
       "#DC2626",
@@ -446,7 +468,7 @@ const App = {
         const shape = shapes[Math.floor(Math.random() * shapes.length)];
         const size = 8 + Math.random() * 6;
         const startX = Math.random() * 100;
-        const drift = (Math.random() - 0.5) * 100; // Horizontal drift
+        const drift = (Math.random() - 0.5) * 100;
 
         confetti.style.position = "fixed";
         confetti.style.width = size + "px";
@@ -459,7 +481,6 @@ const App = {
         confetti.style.borderRadius = shape === "circle" ? "50%" : "2px";
         confetti.style.opacity = "0.8";
 
-        // Create custom animation
         const duration = 2.5 + Math.random() * 1.5;
         const rotation = 360 + Math.random() * 360;
 
@@ -489,6 +510,40 @@ const App = {
           confetti.remove();
         }, (duration + 0.5) * 1000);
       }, i * 40);
+    }
+  },
+
+  // Play confetti sound using Web Audio API
+  playConfettiSound() {
+    try {
+      const audioContext = new (window.AudioContext ||
+        window.webkitAudioContext)();
+
+      // Create a cheerful ascending tone
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+
+      // Celebratory sound settings
+      oscillator.type = "sine";
+      oscillator.frequency.setValueAtTime(523.25, audioContext.currentTime); // C5
+      oscillator.frequency.exponentialRampToValueAtTime(
+        1046.5,
+        audioContext.currentTime + 0.2
+      ); // C6
+
+      gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(
+        0.01,
+        audioContext.currentTime + 0.3
+      );
+
+      oscillator.start(audioContext.currentTime);
+      oscillator.stop(audioContext.currentTime + 0.3);
+    } catch (e) {
+      console.log("Audio not supported:", e);
     }
   },
 };
