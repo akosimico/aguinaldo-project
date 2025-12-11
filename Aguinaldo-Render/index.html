@@ -561,7 +561,7 @@
 
     <!-- Result Modal -->
     <div id="resultModal" class="modal">
-      <div class="modal-content text-center space-y-6 relative">
+      <div class="modal-content text-center space-y-6 relative" onclick="event.stopPropagation()">
         <div class="text-6xl">🎉</div>
         <h2 class="text-3xl font-bold text-gray-800">Congratulations!</h2>
         <div class="space-y-2">
@@ -592,7 +592,7 @@
 
     <!-- Settings Modal -->
     <div id="settingsModal" class="modal">
-      <div class="modal-content custom-scrollbar space-y-6 w-full max-w-md">
+      <div class="modal-content custom-scrollbar space-y-6 w-full max-w-md" onclick="event.stopPropagation()">
         <div class="flex items-center justify-between">
           <h2 class="text-2xl font-bold text-gray-800">Manage Items</h2>
           <button
@@ -659,7 +659,7 @@
 
     <!-- Confirm Modal -->
     <div id="confirmModal" class="modal">
-      <div class="modal-content text-center space-y-4 max-w-sm">
+      <div class="modal-content text-center space-y-4 max-w-sm" onclick="event.stopPropagation()">
         <div class="text-4xl">⚠️</div>
         <h3 class="text-xl font-bold text-gray-800" id="confirmTitle">
           Are you sure?
