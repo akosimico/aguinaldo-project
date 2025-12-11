@@ -16,10 +16,8 @@ const Spinner = {
     this.track = document.getElementById("spinnerTrack");
     this.items = ItemManager.getAllItems();
 
-    // Initialize tick sound using Web Audio API (reuse context)
-    if (!this.audioContext) {
-      this.initTickSound();
-    }
+    // Initialize tick sound using Web Audio API
+    this.initTickSound();
   },
 
   // Create tick sound
@@ -77,8 +75,8 @@ const Spinner = {
   // Generate spinner items array
   generateSpinnerItems(selectedItem) {
     const spinnerItems = [];
-    const totalItems = 30; // reduced from 50
-    const cycles = 10; // reduced from 25
+    const totalItems = 50;
+    const cycles = 25;
 
     for (let cycle = 0; cycle < cycles; cycle++) {
       for (let i = 0; i < totalItems; i++) {
@@ -326,13 +324,16 @@ const Spinner = {
       return;
     }
 
+    // Add delay before showing result modal
     try {
-      if (App?.showResult) {
-        App.showResult(winningItem);
-        console.log("showResult() executed.");
-      } else {
-        console.error("App.showResult NOT FOUND!");
-      }
+      setTimeout(() => {
+        if (App?.showResult) {
+          App.showResult(winningItem);
+          console.log("showResult() executed.");
+        } else {
+          console.error("App.showResult NOT FOUND!");
+        }
+      }, 1500); // 1.5 seconds delay
     } catch (err) {
       console.error("Error calling showResult:", err);
     }
