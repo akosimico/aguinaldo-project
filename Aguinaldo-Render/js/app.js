@@ -34,31 +34,39 @@ const App = {
   // PREVENT ALL PAGE RELOADS
   preventReload() {
     console.log("Setting up reload prevention...");
-    
+
     // Prevent form submissions
-    document.addEventListener('submit', (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      console.log('⚠️ Form submission prevented');
-      return false;
-    }, true);
+    document.addEventListener(
+      "submit",
+      (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        console.log("⚠️ Form submission prevented");
+        return false;
+      },
+      true
+    );
 
     // Log page unload attempts
-    window.addEventListener('beforeunload', (e) => {
-      console.log('⚠️ PAGE IS TRYING TO RELOAD!');
+    window.addEventListener("beforeunload", (e) => {
+      console.log("⚠️ PAGE IS TRYING TO RELOAD!");
       console.trace();
     });
 
     // Prevent anchor link navigation
-    document.addEventListener('click', (e) => {
-      const target = e.target.closest('a');
-      if (target && target.href && target.href !== '#' && !target.target) {
-        console.log('⚠️ Link click prevented:', target.href);
-        e.preventDefault();
-        e.stopPropagation();
-        return false;
-      }
-    }, true);
+    document.addEventListener(
+      "click",
+      (e) => {
+        const target = e.target.closest("a");
+        if (target && target.href && target.href !== "#" && !target.target) {
+          console.log("⚠️ Link click prevented:", target.href);
+          e.preventDefault();
+          e.stopPropagation();
+          return false;
+        }
+      },
+      true
+    );
 
     console.log("✅ Reload prevention active");
   },
@@ -140,7 +148,7 @@ const App = {
         this.spinnerScreen.addEventListener("click", (e) => {
           e.preventDefault();
           e.stopPropagation();
-          
+
           console.log("Spinner screen clicked");
 
           if (document.getElementById("resultScreen")) {
@@ -162,7 +170,7 @@ const App = {
             }
             Spinner.stop();
           }
-          
+
           return false;
         });
       }
@@ -345,116 +353,66 @@ const App = {
   // Show result as full-screen overlay with blurred spinner background
   showResult(item) {
     try {
-      console.log("=== SHOWRESULT CALLED ===");
-      console.log("Timestamp:", Date.now());
-      console.log("Item:", JSON.stringify(item));
-      console.log("Spinner screen exists:", !!this.spinnerScreen);
-      console.log("Landing screen exists:", !!this.landingScreen);
+      console.log("=== SHOWRESULT (iPhone Safe) ===");
 
-      // CRITICAL: Disable ALL event listeners temporarily
       const spinnerScreen = this.spinnerScreen;
+
+      // SAFER: use opacity fade instead of blur (iOS bug)
       if (spinnerScreen) {
-        console.log("Disabling spinner screen events");
-        spinnerScreen.style.pointerEvents = "none";
-        spinnerScreen.style.filter = "blur(10px)";
-        spinnerScreen.style.webkitFilter = "blur(10px)";
+        spinnerScreen.style.opacity = "0.25";
+        spinnerScreen.style.pointerEvents = "none"; // but allow overlay
       }
 
-      // Hide other screens
-      if (this.landingScreen) {
-        console.log("Hiding landing screen");
-        this.landingScreen.style.display = "none";
-      }
-      if (this.settingsModal) {
-        this.settingsModal.style.display = "none";
-      }
-
-      // Create result screen HTML
-      const resultHTML = this.createResultHTML(item);
-      console.log("Result HTML created, length:", resultHTML.length);
-
-      // Create element
+      // Create the result screen
       const resultScreen = document.createElement("div");
       resultScreen.id = "resultScreen";
-      resultScreen.innerHTML = resultHTML;
 
-      // Apply styles
-      resultScreen.setAttribute("style", `
+      // iPhone-safe fullscreen overlay
+      resultScreen.setAttribute(
+        "style",
+        `
         position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
+        inset: 0;
         width: 100%;
         height: 100%;
-        background: rgba(0, 0, 0, 0.6);
-        backdrop-filter: blur(8px);
-        -webkit-backdrop-filter: blur(8px);
-        z-index: 10000;
+        background: rgba(0,0,0,0.65);
+        z-index: 999999;
         display: flex;
         align-items: center;
         justify-content: center;
         padding: 1rem;
         overflow-y: auto;
         -webkit-overflow-scrolling: touch;
-      `);
+        opacity: 0;
+        transition: opacity 0.25s ease;
+      `
+      );
 
-      console.log("About to append result screen to body");
+      resultScreen.innerHTML = this.createResultHTML(item);
+
       document.body.appendChild(resultScreen);
-      console.log("Result screen appended");
 
-      // Verify it's in the DOM
-      const checkResult = document.getElementById("resultScreen");
-      console.log("Result screen in DOM:", !!checkResult);
-      console.log(
-        "Result screen display:",
-        checkResult ? window.getComputedStyle(checkResult).display : "N/A"
-      );
-      console.log(
-        "Result screen z-index:",
-        checkResult ? window.getComputedStyle(checkResult).zIndex : "N/A"
-      );
+      // --- FORCE iPhone to repaint the element ---
+      requestAnimationFrame(() => {
+        resultScreen.style.opacity = "1";
+      });
 
-      // Add animation styles
-      this.addResultStyles();
+      // --- SAFER event handling using delegation ---
+      resultScreen.addEventListener("click", (e) => {
+        const id = e.target.id || e.target.closest("button")?.id || "";
 
-      // Setup button listeners
-      setTimeout(() => {
-        console.log("Setting up button listeners");
-        const tryAgainBtn = document.getElementById("tryAgainBtnFS");
-        const backHomeBtn = document.getElementById("backHomeBtnFS");
-
-        console.log("Try again button exists:", !!tryAgainBtn);
-        console.log("Back home button exists:", !!backHomeBtn);
-
-        if (tryAgainBtn) {
-          tryAgainBtn.onclick = (e) => {
-            console.log("=== TRY AGAIN CLICKED ===");
-            e.preventDefault();
-            e.stopPropagation();
-            this.closeResult();
-            if (this.spinnerScreen) {
-              this.showSpinner();
-            }
-            return false;
-          };
+        if (id === "tryAgainBtnFS") {
+          console.log("Try Again clicked (iPhone safe)");
+          this.closeResult();
+          this.showSpinner();
         }
 
-        if (backHomeBtn) {
-          backHomeBtn.onclick = (e) => {
-            console.log("=== BACK HOME CLICKED ===");
-            e.preventDefault();
-            e.stopPropagation();
-            this.closeResult();
-            if (this.landingScreen) {
-              this.showLanding();
-            }
-            return false;
-          };
+        if (id === "backHomeBtnFS") {
+          console.log("Home clicked (iPhone safe)");
+          this.closeResult();
+          this.showLanding();
         }
-
-        console.log("Button listeners attached");
-      }, 100);
+      });
 
       // Restore spin button
       const stopBtn = document.getElementById("stopSpinBtn");
@@ -463,47 +421,19 @@ const App = {
         stopBtn.innerHTML = this.spinIconHTMLs.idle;
       }
 
-      // Trigger effects
-      this.triggerConfetti();
+      // Light confetti (iPhone-safe)
+      setTimeout(() => this.triggerConfetti(), 150);
 
+      // iPhone vibration fallback
       if (navigator.vibrate) {
         try {
-          navigator.vibrate([200, 100, 200]);
-        } catch (e) {
-          console.log("Vibrate not supported");
-        }
+          navigator.vibrate([180, 80, 180]);
+        } catch (_) {}
       }
 
       console.log("=== SHOWRESULT COMPLETE ===");
-      console.log("Result screen should be visible now");
-
-      // Double-check after 1 second
-      setTimeout(() => {
-        const stillThere = document.getElementById("resultScreen");
-        console.log("=== 1 SECOND LATER CHECK ===");
-        console.log("Result screen still in DOM:", !!stillThere);
-        if (!stillThere) {
-          console.error("❌ ERROR: Result screen was removed!");
-          console.trace();
-        } else {
-          console.log("✅ Result screen still visible");
-        }
-      }, 1000);
-
-      // Check after 2 seconds
-      setTimeout(() => {
-        const stillThere2 = document.getElementById("resultScreen");
-        console.log("=== 2 SECONDS LATER CHECK ===");
-        console.log("Result screen still in DOM:", !!stillThere2);
-        if (!stillThere2) {
-          console.error("❌ ERROR: Result screen disappeared after 2 seconds!");
-        } else {
-          console.log("✅ Result screen still visible after 2 seconds");
-        }
-      }, 2000);
-    } catch (error) {
-      console.error("❌ CRITICAL ERROR in showResult:", error);
-      console.error("Stack:", error.stack);
+    } catch (err) {
+      console.error("iPhone-safe showResult error:", err);
     }
   },
 
@@ -729,52 +659,19 @@ const App = {
     document.head.appendChild(style);
   },
 
-  // Close result screen
   closeResult() {
-    console.log("=== CLOSERESULT CALLED ===");
-    console.log("Call stack:");
-    console.trace();
+    const rs = document.getElementById("resultScreen");
+    if (!rs) return;
 
-    try {
-      const resultScreen = document.getElementById("resultScreen");
-      console.log("Result screen exists when closing:", !!resultScreen);
+    rs.style.opacity = "0";
 
-      if (resultScreen) {
-        console.log("Fading out result screen");
-        resultScreen.style.opacity = "0";
-        resultScreen.style.transition = "opacity 0.3s ease";
-
-        setTimeout(() => {
-          console.log("Removing result screen from DOM");
-          resultScreen.remove();
-
-          if (this.spinnerScreen) {
-            console.log("Restoring spinner screen");
-            this.spinnerScreen.style.filter = "none";
-            this.spinnerScreen.style.webkitFilter = "none";
-            this.spinnerScreen.style.pointerEvents = "auto";
-          }
-
-          if (this.landingScreen) {
-            console.log("Showing landing screen");
-            this.landingScreen.style.display = "";
-          }
-          if (this.spinnerScreen) {
-            this.spinnerScreen.style.display = "";
-          }
-
-          console.log("Result screen removed successfully");
-        }, 300);
-      } else {
-        console.warn("⚠️ closeResult called but no result screen found");
+    setTimeout(() => {
+      rs.remove();
+      if (this.spinnerScreen) {
+        this.spinnerScreen.style.opacity = "1";
+        this.spinnerScreen.style.pointerEvents = "auto";
       }
-
-      if (typeof Spinner !== "undefined" && Spinner.reset) {
-        Spinner.reset();
-      }
-    } catch (error) {
-      console.error("❌ Error closing result:", error);
-    }
+    }, 200);
   },
 
   // Helper function for rarity gradients
