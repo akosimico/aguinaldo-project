@@ -31,10 +31,45 @@ const App = {
     `,
   },
 
+  // PREVENT ALL PAGE RELOADS
+  preventReload() {
+    console.log("Setting up reload prevention...");
+    
+    // Prevent form submissions
+    document.addEventListener('submit', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      console.log('⚠️ Form submission prevented');
+      return false;
+    }, true);
+
+    // Log page unload attempts
+    window.addEventListener('beforeunload', (e) => {
+      console.log('⚠️ PAGE IS TRYING TO RELOAD!');
+      console.trace();
+    });
+
+    // Prevent anchor link navigation
+    document.addEventListener('click', (e) => {
+      const target = e.target.closest('a');
+      if (target && target.href && target.href !== '#' && !target.target) {
+        console.log('⚠️ Link click prevented:', target.href);
+        e.preventDefault();
+        e.stopPropagation();
+        return false;
+      }
+    }, true);
+
+    console.log("✅ Reload prevention active");
+  },
+
   // Initialize app
   init() {
     try {
       console.log("=== App initializing ===");
+
+      // PREVENT PAGE RELOADS FIRST
+      this.preventReload();
 
       // Get DOM elements
       this.landingScreen = document.getElementById("landingScreen");
@@ -73,13 +108,17 @@ const App = {
       const stopSpinBtn = document.getElementById("stopSpinBtn");
 
       if (getAguinaldoBtn) {
-        getAguinaldoBtn.addEventListener("click", () => {
+        getAguinaldoBtn.addEventListener("click", (e) => {
+          e.preventDefault();
+          e.stopPropagation();
           this.showSpinner();
         });
       }
 
       if (settingsBtn) {
-        settingsBtn.addEventListener("click", () => {
+        settingsBtn.addEventListener("click", (e) => {
+          e.preventDefault();
+          e.stopPropagation();
           this.openSettings();
         });
       }
@@ -87,6 +126,8 @@ const App = {
       // Spinner controls
       if (stopSpinBtn) {
         stopSpinBtn.addEventListener("click", (e) => {
+          e.preventDefault();
+          e.stopPropagation();
           const btn = e.currentTarget;
           btn.disabled = true;
           btn.innerHTML = this.spinIconHTMLs.spinning;
@@ -97,16 +138,19 @@ const App = {
       // Allow tapping anywhere on spinner screen to stop
       if (this.spinnerScreen) {
         this.spinnerScreen.addEventListener("click", (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          
           console.log("Spinner screen clicked");
 
           if (document.getElementById("resultScreen")) {
             console.log("Result screen is open, ignoring spinner click");
-            return;
+            return false;
           }
 
           if (!Spinner.isSpinning) {
             console.log("Spinner not spinning, ignoring click");
-            return;
+            return false;
           }
 
           if (e.target.id !== "stopSpinBtn") {
@@ -118,6 +162,8 @@ const App = {
             }
             Spinner.stop();
           }
+          
+          return false;
         });
       }
 
@@ -127,19 +173,25 @@ const App = {
       const resetItemsBtn = document.getElementById("resetItemsBtn");
 
       if (closeSettingsBtn) {
-        closeSettingsBtn.addEventListener("click", () => {
+        closeSettingsBtn.addEventListener("click", (e) => {
+          e.preventDefault();
+          e.stopPropagation();
           this.closeSettings();
         });
       }
 
       if (addItemBtn) {
-        addItemBtn.addEventListener("click", () => {
+        addItemBtn.addEventListener("click", (e) => {
+          e.preventDefault();
+          e.stopPropagation();
           this.handleAddOrUpdateItem();
         });
       }
 
       if (resetItemsBtn) {
-        resetItemsBtn.addEventListener("click", () => {
+        resetItemsBtn.addEventListener("click", (e) => {
+          e.preventDefault();
+          e.stopPropagation();
           this.handleResetItems();
         });
       }
@@ -149,7 +201,9 @@ const App = {
       const confirmNoBtn = document.getElementById("confirmNoBtn");
 
       if (confirmYesBtn) {
-        confirmYesBtn.addEventListener("click", () => {
+        confirmYesBtn.addEventListener("click", (e) => {
+          e.preventDefault();
+          e.stopPropagation();
           if (this.confirmCallback) {
             this.confirmCallback();
           }
@@ -158,7 +212,9 @@ const App = {
       }
 
       if (confirmNoBtn) {
-        confirmNoBtn.addEventListener("click", () => {
+        confirmNoBtn.addEventListener("click", (e) => {
+          e.preventDefault();
+          e.stopPropagation();
           this.closeConfirm();
         });
       }
@@ -180,6 +236,7 @@ const App = {
       if (newItemValue) {
         newItemValue.addEventListener("keypress", (e) => {
           if (e.key === "Enter") {
+            e.preventDefault();
             this.handleAddOrUpdateItem();
           }
         });
@@ -188,6 +245,7 @@ const App = {
       if (newItemWeight) {
         newItemWeight.addEventListener("keypress", (e) => {
           if (e.key === "Enter") {
+            e.preventDefault();
             this.handleAddOrUpdateItem();
           }
         });
@@ -321,9 +379,7 @@ const App = {
       resultScreen.innerHTML = resultHTML;
 
       // Apply styles
-      resultScreen.setAttribute(
-        "style",
-        `
+      resultScreen.setAttribute("style", `
         position: fixed;
         top: 0;
         left: 0;
@@ -341,8 +397,7 @@ const App = {
         padding: 1rem;
         overflow-y: auto;
         -webkit-overflow-scrolling: touch;
-      `
-      );
+      `);
 
       console.log("About to append result screen to body");
       document.body.appendChild(resultScreen);
@@ -381,6 +436,7 @@ const App = {
             if (this.spinnerScreen) {
               this.showSpinner();
             }
+            return false;
           };
         }
 
@@ -393,6 +449,7 @@ const App = {
             if (this.landingScreen) {
               this.showLanding();
             }
+            return false;
           };
         }
 
@@ -676,7 +733,7 @@ const App = {
   closeResult() {
     console.log("=== CLOSERESULT CALLED ===");
     console.log("Call stack:");
-    console.trace(); // This will show WHO called closeResult
+    console.trace();
 
     try {
       const resultScreen = document.getElementById("resultScreen");
