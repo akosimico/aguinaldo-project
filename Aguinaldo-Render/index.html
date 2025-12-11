@@ -814,6 +814,82 @@
           addLog("ERROR", `Promise rejection: ${e.reason}`);
         });
 
+        // ===== NEW: CATCH PAGE RELOAD ATTEMPTS =====
+        window.addEventListener("beforeunload", (e) => {
+          addLog("ERROR", "🚨 PAGE IS RELOADING!!! 🚨");
+          console.trace();
+
+          // BLOCK THE RELOAD TEMPORARILY
+          e.preventDefault();
+          e.returnValue = "Debug: Blocking reload";
+          return "Debug: Blocking reload";
+        });
+
+        // ===== NEW: LOG ALL USER INTERACTIONS =====
+        let lastInteraction = { type: "none", target: "none", time: 0 };
+
+        document.addEventListener(
+          "click",
+          (e) => {
+            const info = `Click: ${e.target.tagName} id="${e.target.id}" class="${e.target.className}"`;
+            lastInteraction = { type: "click", target: info, time: Date.now() };
+            addLog("LOG", "👆 " + info);
+          },
+          true
+        );
+
+        document.addEventListener(
+          "touchend",
+          (e) => {
+            const target = e.target || e.touches[0]?.target;
+            if (target) {
+              const info = `Touch: ${target.tagName} id="${target.id}" class="${target.className}"`;
+              lastInteraction = {
+                type: "touch",
+                target: info,
+                time: Date.now(),
+              };
+              addLog("LOG", "👆 " + info);
+            }
+          },
+          true
+        );
+
+        // ===== NEW: LOG NAVIGATION ATTEMPTS =====
+        const originalPushState = history.pushState;
+        const originalReplaceState = history.replaceState;
+
+        history.pushState = function (...args) {
+          addLog("ERROR", "⚠️ history.pushState called: " + args[2]);
+          return originalPushState.apply(history, args);
+        };
+
+        history.replaceState = function (...args) {
+          addLog("ERROR", "⚠️ history.replaceState called: " + args[2]);
+          return originalReplaceState.apply(history, args);
+        };
+
+        window.addEventListener("popstate", (e) => {
+          addLog("ERROR", "⚠️ popstate event fired");
+        });
+
+        window.addEventListener("hashchange", (e) => {
+          addLog("ERROR", "⚠️ hashchange event fired");
+        });
+
+        // ===== NEW: CATCH FORM SUBMISSIONS =====
+        document.addEventListener(
+          "submit",
+          (e) => {
+            addLog("ERROR", "🚨 FORM SUBMISSION DETECTED! 🚨");
+            console.trace();
+            e.preventDefault();
+            e.stopPropagation();
+            return false;
+          },
+          true
+        );
+
         console.log(
           "Debug overlay ready! Tap the red bug button to view logs."
         );
