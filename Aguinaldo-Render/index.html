@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
+    <title>Aguinaldo Randomizer - Merry Christmas! 🎄</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap");
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        -webkit-tap-highlight-color: transparent;
+      }
+
+      body {
+        font-family: "Poppins", sans-serif;
+        overflow-x: hidden;
+      }
+
+      /* Custom Color Palette */
+      :root {
+        --primary: #10b981;
+        --secondary: #dc2626;
+        --accent: #f59e0b;
+        --rare: #8b5cf6;
+        --bg-light: #f9fafb;
+        --dark: #111827;
+      }
+
+      /* Landing Page Animations */
+      @keyframes float {
+        0%,
+        100% {
+          transform: translateY(0px);
+        }
+        50% {
+          transform: translateY(-20px);
+        }
+      }
+
+      @keyframes glow {
+        0%,
+        100% {
+          box-shadow: 0 0 20px rgba(16, 185, 129, 0.5);
+        }
+        50% {
+          box-shadow: 0 0 40px rgba(16, 185, 129, 0.8);
+        }
+      }
+
+      .float-animation {
+        animation: float 3s ease-in-out infinite;
+      }
+
+      .glow-button {
+        animation: glow 2s ease-in-out infinite;
+      }
+
+      /* Spinner Container */
+      .spinner-container {
+        position: relative;
+        width: 100%;
+        height: 250px;
+        overflow: hidden;
+        background: linear-gradient(
+          180deg,
+          #065f46 0%,
+          #059669 50%,
+          #047857 100%
+        );
+        border-radius: 20px;
+        border: 3px solid #dc2626;
+        box-shadow: 0 0 40px rgba(220, 38, 38, 0.4),
+          inset 0 0 30px rgba(255, 255, 255, 0.1);
+      }
+
+      /* Snowflake animation */
+      @keyframes snowfall {
+        0% {
+          transform: translateY(-10px) rotate(0deg);
+          opacity: 0.8;
+        }
+        50% {
+          opacity: 0.6;
+        }
+        100% {
+          transform: translateY(250px) rotate(360deg);
+          opacity: 0;
+        }
+      }
+
+      .spinner-container::before,
+      .spinner-container::after {
+        content: "❄️ ❄️ ❄️ ❄️ ❄️";
+        position: absolute;
+        top: 0;
+        font-size: 1.5rem;
+        opacity: 0.7;
+        animation: snowfall 6s linear infinite;
+        z-index: 5;
+      }
+
+      .spinner-container::before {
+        left: 10%;
+        animation-delay: 0s;
+      }
+
+      .spinner-container::after {
+        right: 10%;
+        animation-delay: 3s;
+      }
+
+      .spinner-track {
+        display: flex;
+        position: absolute;
+        top: 15%;
+        transform: translateY(-50%);
+        transition: transform 0.1s linear;
+        will-change: transform;
+        padding: 0;
+      }
+
+      .spinner-item {
+        margin-top: -50px;
+        min-width: 150px;
+        height: 180px;
+        margin: 0 5px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        border-radius: 16px;
+        background: white;
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+        transition: transform 0.2s;
+        border: 2px solid #ffd700;
+        position: relative;
+        overflow: visible;
+      }
+
+      .spinner-item::before {
+        content: "✨";
+        position: absolute;
+        font-size: 2rem;
+        top: -20px;
+        left: 50%;
+        transform: translateX(-50%);
+        animation: float 2s ease-in-out infinite;
+        pointer-events: none;
+      }
+
+      .spinner-item.rare {
+        background: linear-gradient(135deg, #9333ea 0%, #e91e63 100%);
+        color: white;
+        box-shadow: 0 0 30px rgba(147, 51, 234, 0.7),
+          0 8px 16px rgba(0, 0, 0, 0.2);
+        border: 2px solid #ffd700;
+      }
+
+      .spinner-item.uncommon {
+        background: linear-gradient(135deg, #ea8a00 0%, #dc2626 100%);
+        color: white;
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+        border: 2px solid #ffd700;
+      }
+
+      .spinner-item.common {
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        color: white;
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+        border: 2px solid #ffd700;
+      }
+
+      .spinner-item.selected-winner {
+        transform: scale(1.15) !important;
+        box-shadow: 0 0 60px rgba(220, 38, 38, 1),
+          0 0 40px rgba(255, 215, 0, 0.8) !important;
+        border: 3px solid #ffd700 !important;
+        z-index: 100;
+        animation: pulse-winner 0.5s ease-in-out infinite;
+      }
+
+      @keyframes pulse-winner {
+        0%,
+        100% {
+          transform: scale(1.15);
+        }
+        50% {
+          transform: scale(1.2);
+        }
+      }
+
+      /* Selection Indicator */
+      .selection-indicator {
+        position: absolute;
+        top: 5%;
+        left: 50%;
+        transform: translateY(-50%) translateX(-50%);
+        width: 3px;
+        height: 80px;
+        background: #ffd700;
+        pointer-events: none;
+        z-index: 10;
+        box-shadow: 0 0 12px #ffd700, 0 0 25px rgba(255, 215, 0, 0.4);
+      }
+
+      /* Modal Styles */
+      .modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.8);
+        z-index: 1000;
+        animation: fadeIn 0.3s ease;
+      }
+
+      .modal.active {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .modal-content {
+        background: white;
+        border-radius: 24px;
+        padding: 2rem;
+        max-width: 90%;
+        max-height: 90vh;
+        overflow-y: auto;
+        animation: slideUp 0.3s ease;
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+        }
+        to {
+          opacity: 1;
+        }
+      }
+
+      @keyframes slideUp {
+        from {
+          transform: translateY(50px);
+          opacity: 0;
+        }
+        to {
+          transform: translateY(0);
+          opacity: 1;
+        }
+      }
+
+      /* Confetti Animation */
+      .confetti {
+        position: fixed;
+        width: 10px;
+        height: 10px;
+        background: var(--primary);
+        position: absolute;
+        animation: confetti-fall 3s linear;
+      }
+
+      @keyframes confetti-fall {
+        to {
+          transform: translateY(100vh) rotate(360deg);
+          opacity: 0;
+        }
+      }
+
+      /* Rarity Badge */
+      .rarity-badge {
+        font-size: 0.7rem;
+        padding: 2px 8px;
+        border-radius: 12px;
+        font-weight: 600;
+        text-transform: uppercase;
+      }
+
+      /* Custom Scrollbar */
+      .custom-scrollbar::-webkit-scrollbar {
+        width: 8px;
+      }
+
+      .custom-scrollbar::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 10px;
+      }
+
+      .custom-scrollbar::-webkit-scrollbar-thumb {
+        background: var(--primary);
+        border-radius: 10px;
+      }
+
+      /* Pulsing animation for tap instruction */
+      @keyframes pulse {
+        0%,
+        100% {
+          transform: scale(1);
+        }
+        50% {
+          transform: scale(1.05);
+        }
+      }
+
+      .pulse-animation {
+        animation: pulse 2s ease-in-out infinite;
+      }
+    </style>
+  </head>
+  <body class="bg-gray-50">
+    <!-- Landing Screen -->
+    <div
+      id="landingScreen"
+      class="min-h-screen flex flex-col items-center justify-center p-6 bg-gradient-to-br from-green-50 to-red-50"
+    >
+      <div class="text-center space-y-8 max-w-md">
+        <!-- Christmas Icon -->
+        <div class="float-animation">
+          <svg
+            class="w-32 h-32 mx-auto"
+            viewBox="0 0 200 200"
+            xmlns="http://www.w3.org/2000/svg"
+            role="img"
+            aria-label="Christmas tree icon"
+          >
+            <!-- Star -->
+            <polygon
+              points="100,20 108,40 130,42 112,56 118,76 100,64 82,76 88,56 70,42 92,40"
+              fill="#FBBF24"
+            />
+
+            <!-- Tree layers -->
+            <path
+              d="M100 46 L126 86 L110 86 L140 126 L60 126 L90 86 L74 86 Z"
+              fill="#059669"
+            />
+            <path
+              d="M100 70 L138 114 L118 114 L154 160 L46 160 L82 114 L62 114 Z"
+              fill="#10B981"
+            />
+
+            <!-- Trunk -->
+            <rect x="88" y="160" width="24" height="26" rx="4" fill="#7C4A2A" />
+
+            <!-- Ornaments -->
+            <circle cx="86" cy="100" r="6" fill="#EF4444" />
+            <circle cx="114" cy="96" r="6" fill="#EC4899" />
+            <circle cx="100" cy="122" r="6" fill="#3B82F6" />
+            <circle cx="72" cy="132" r="5" fill="#F59E0B" />
+            <circle cx="128" cy="132" r="5" fill="#F59E0B" />
+
+            <!-- Gift at base -->
+            <rect x="54" y="168" width="92" height="18" rx="6" fill="#DC2626" />
+            <rect x="88" y="168" width="24" height="18" rx="2" fill="#FBBF24" />
+          </svg>
+        </div>
+
+        <!-- Welcome Text -->
+        <div class="space-y-4">
+          <h1 class="text-4xl font-bold text-gray-800 leading-tight">
+            Ready for your<br />
+            <span class="text-green-600">pamasko?</span>
+          </h1>
+          <p class="text-gray-600 text-lg leading-relaxed">
+            Tap or shake to reveal your<br />
+            <span class="font-semibold text-red-600">Christmas gift</span>
+          </p>
+          <p class="text-sm text-gray-500 italic">
+            May your holidays be bright,<br />
+            merry and full of surprises ✨
+          </p>
+        </div>
+
+        <!-- Get Aguinaldo Button -->
+        <button
+          id="getAguinaldoBtn"
+          class="glow-button w-full py-4 px-8 bg-green-600 hover:bg-green-700 text-white font-bold text-xl rounded-full shadow-lg transition-all transform hover:scale-105 active:scale-95"
+        >
+          🎁 Get My Aguinaldo
+        </button>
+
+        <!-- Settings Button -->
+        <button
+          id="settingsBtn"
+          class="text-gray-500 hover:text-gray-700 text-sm underline"
+        >
+          ⚙️ Manage Items
+        </button>
+      </div>
+      <footer
+        class="w-full flex flex-col sm:flex-row justify-center items-center gap-2 mt-6 text-sm text-gray-500"
+      >
+        <span>&copy; 2025 ako si mico</span>
+      </footer>
+    </div>
+    <script>
+      (function () {
+        var y = document.getElementById("year");
+        if (y) y.textContent = new Date().getFullYear();
+      })();
+    </script>
+
+    <!-- Spinner Screen -->
+    <div
+      id="spinnerScreen"
+      class="hidden min-h-screen flex flex-col bg-gradient-to-br from-green-900 via-red-900 to-green-800"
+    >
+      <!-- Decorative snowflakes background -->
+      <div class="absolute inset-0 pointer-events-none overflow-hidden">
+        <div class="absolute top-10 left-5 text-4xl opacity-30">❄️</div>
+        <div class="absolute top-20 right-10 text-3xl opacity-40">⛄</div>
+        <div class="absolute bottom-32 left-10 text-3xl opacity-35">❄️</div>
+        <div class="absolute bottom-20 right-5 text-4xl opacity-30">✨</div>
+      </div>
+
+      <!-- Header -->
+      <div class="p-6 text-center relative z-10">
+        <h2
+          class="flex items-center gap-2 text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-500 mb-2 drop-shadow-md"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="w-6 h-6"
+            fill="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              d="M20 7h-3.17a3 3 0 0 0 .17-1 3 3 0 1 0-5.83 1H12a3 3 0 1 0-5.83 1H3v3h18V7zM5 21h6V12H5v9zm8 0h6V12h-6v9z"
+            />
+          </svg>
+          Spin For Your Gift...
+        </h2>
+
+        <p
+          id="spinnerInstruction"
+          class="text-yellow-200 pulse-animation font-semibold"
+        >
+          ✨ Tap anywhere to spin! ✨
+        </p>
+      </div>
+
+      <!-- Spinner Container -->
+      <div class="flex-1 flex items-center justify-center relative z-20">
+        <div class="w-full max-w-2xl px-4">
+          <div class="spinner-container relative">
+            <div class="selection-indicator"></div>
+            <div id="spinnerTrack" class="spinner-track"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <div class="p-6 text-center relative z-10">
+        <button
+          id="stopSpinBtn"
+          class="py-4 px-12 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-bold text-lg rounded-full shadow-lg transition-all transform hover:scale-105 active:scale-95 border-2 border-yellow-400"
+        >
+          SPIN
+        </button>
+      </div>
+    </div>
+
+    <!-- Result Modal -->
+    <div id="resultModal" class="modal">
+      <div class="modal-content text-center space-y-6 relative">
+        <div class="text-6xl">🎉</div>
+        <h2 class="text-3xl font-bold text-gray-800">Congratulations!</h2>
+        <div class="space-y-2">
+          <p class="text-gray-600">You received</p>
+          <div
+            id="resultAmount"
+            class="text-6xl font-bold text-green-600"
+          ></div>
+          <div id="resultRarity" class="inline-block rarity-badge"></div>
+        </div>
+        <p class="text-gray-500 italic">Merry Christmas! 🎄</p>
+        <div class="flex gap-3">
+          <button
+            id="tryAgainBtn"
+            class="flex-1 py-3 px-6 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-xl transition-all"
+          >
+            Try Again
+          </button>
+          <button
+            id="closeResultBtn"
+            class="flex-1 py-3 px-6 bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold rounded-xl transition-all"
+          >
+            Back to Home
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div id="settingsModal" class="modal">
+      <div class="modal-content custom-scrollbar space-y-6 w-full max-w-md">
+        <div class="flex items-center justify-between">
+          <h2 class="text-2xl font-bold text-gray-800">Manage Items</h2>
+          <button
+            id="closeSettingsBtn"
+            class="text-gray-500 hover:text-gray-700 text-2xl"
+          >
+            &times;
+          </button>
+        </div>
+
+        <!-- Add New Item Form -->
+        <div class="bg-gray-50 p-4 rounded-xl space-y-3">
+          <h3 class="font-semibold text-gray-700">Add New Item</h3>
+          <input
+            type="text"
+            id="newItemValue"
+            placeholder="Value (e.g., 1000 or 'Bonus')"
+            class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none"
+          />
+          <div class="flex gap-2">
+            <input
+              type="number"
+              id="newItemWeight"
+              placeholder="Chance %"
+              min="1"
+              max="100"
+              class="flex-1 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none"
+            />
+            <select
+              id="newItemRarity"
+              class="flex-1 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none"
+            >
+              <option value="common">Common</option>
+              <option value="uncommon">Uncommon</option>
+              <option value="rare">Rare</option>
+            </select>
+          </div>
+          <button
+            id="addItemBtn"
+            class="w-full py-3 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg transition-all"
+          >
+            + Add Item
+          </button>
+        </div>
+
+        <!-- Items List -->
+        <div class="space-y-3">
+          <div class="flex items-center justify-between">
+            <h3 class="font-semibold text-gray-700">Current Items</h3>
+            <button
+              id="resetItemsBtn"
+              class="text-sm text-red-600 hover:text-red-700 font-medium"
+            >
+              Reset to Default
+            </button>
+          </div>
+          <div
+            id="itemsList"
+            class="space-y-2 max-h-96 overflow-y-auto custom-scrollbar"
+          ></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Confirm Modal -->
+    <div id="confirmModal" class="modal">
+      <div class="modal-content text-center space-y-4 max-w-sm">
+        <div class="text-4xl">⚠️</div>
+        <h3 class="text-xl font-bold text-gray-800" id="confirmTitle">
+          Are you sure?
+        </h3>
+        <p class="text-gray-600" id="confirmMessage"></p>
+        <div class="flex gap-3">
+          <button
+            id="confirmYesBtn"
+            class="flex-1 py-3 px-6 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-xl transition-all"
+          >
+            Yes
+          </button>
+          <button
+            id="confirmNoBtn"
+            class="flex-1 py-3 px-6 bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold rounded-xl transition-all"
+          >
+            No
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div
+      id="toast"
+      class="hidden fixed bottom-6 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white px-6 py-3 rounded-full shadow-lg z-50 animate-bounce"
+    >
+      <span id="toastMessage"></span>
+    </div>
+
+    <script src="js/storage.js"></script>
+    <script src="js/items.js"></script>
+    <script src="js/spinner.js"></script>
+    <script src="js/app.js"></script>
+  </body>
+</html>
