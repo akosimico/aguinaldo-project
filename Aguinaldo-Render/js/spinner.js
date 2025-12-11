@@ -8,8 +8,8 @@ const Spinner = {
   velocity: 0,
   selectedItem: null,
   spinnerItems: [],
-  tickSound: null, // ADD THIS
-  lastTickPosition: 0, // ADD THIS
+  tickSound: null,
+  lastTickPosition: 0,
 
   // Initialize spinner
   init() {
@@ -17,10 +17,10 @@ const Spinner = {
     this.items = ItemManager.getAllItems();
 
     // Initialize tick sound using Web Audio API
-    this.initTickSound(); // ADD THIS
+    this.initTickSound();
   },
 
-  // ADD THIS METHOD - Create tick sound
+  // Create tick sound
   initTickSound() {
     try {
       this.audioContext = new (window.AudioContext ||
@@ -30,7 +30,7 @@ const Spinner = {
     }
   },
 
-  // ADD THIS METHOD - Play tick sound
+  // Play tick sound
   playTick() {
     if (!this.audioContext) return;
 
@@ -72,7 +72,7 @@ const Spinner = {
     return this.items[0]; // Fallback
   },
 
-  // Generate spinner items array (duplicates for scrolling effect)
+  // Generate spinner items array
   generateSpinnerItems(selectedItem) {
     const spinnerItems = [];
     const totalItems = 50;
@@ -147,15 +147,15 @@ const Spinner = {
     // Render track
     this.renderTrack(this.spinnerItems);
 
-    // Reset position and velocity
+    // Reset state
     this.currentPosition = 0;
     this.velocity = 12;
-    this.lastTickPosition = 0; // ADD THIS
+    this.lastTickPosition = 0;
 
     // Start animation
     this.animate();
 
-    // Vibrate if supported
+    // Vibrate
     if (navigator.vibrate) {
       navigator.vibrate(50);
     }
@@ -193,7 +193,7 @@ const Spinner = {
     this.decelerateTo(targetPosition, decelerationFrames);
   },
 
-  // Decelerate to target position
+  // Decelerate to target
   decelerateTo(targetPosition, frames) {
     let currentFrame = 0;
     const startPosition = this.currentPosition;
@@ -213,14 +213,12 @@ const Spinner = {
       this.currentPosition = startPosition + distance * easeProgress;
       this.track.style.transform = `translateX(${this.currentPosition}px)`;
 
-      // ADD THIS - Play tick sound based on position
       const itemWidth = 170;
       const currentItemIndex = Math.floor(
         Math.abs(this.currentPosition) / itemWidth
       );
 
       if (currentItemIndex !== this.lastTickPosition) {
-        // Play tick less frequently as we slow down
         const tickFrequency = Math.max(
           1,
           Math.floor((frames - currentFrame) / 30)
@@ -248,7 +246,6 @@ const Spinner = {
 
     this.currentPosition -= this.velocity;
 
-    // ADD THIS - Play tick sound at intervals
     const itemWidth = 170;
     const currentItemIndex = Math.floor(
       Math.abs(this.currentPosition) / itemWidth
@@ -264,7 +261,7 @@ const Spinner = {
     this.animationFrame = requestAnimationFrame(() => this.animate());
   },
 
-  // Finish spinning
+  // FINISH — updated for iOS safety + unload tracing
   finish() {
     console.log("=== SPINNER FINISH START ===");
 
@@ -275,10 +272,9 @@ const Spinner = {
       this.animationFrame = null;
     }
 
-    // Vibrate on finish
-    if (navigator.vibrate) {
-      navigator.vibrate([100, 50, 100]);
-    }
+    try {
+      if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
+    } catch (e) {}
 
     const spinnerContainer = document.querySelector(".spinner-container");
     const containerRect = spinnerContainer.getBoundingClientRect();
@@ -290,8 +286,8 @@ const Spinner = {
     let closestIndex = -1;
 
     items.forEach((item, index) => {
-      const itemRect = item.getBoundingClientRect();
-      const itemCenterX = itemRect.left + itemRect.width / 2;
+      const rect = item.getBoundingClientRect();
+      const itemCenterX = rect.left + rect.width / 2;
       const distance = Math.abs(itemCenterX - centerX);
 
       if (distance < closestDistance) {
@@ -301,79 +297,80 @@ const Spinner = {
       }
     });
 
-    if (closestItem) {
-      closestItem.classList.add("selected-winner");
+    if (closestItem) closestItem.classList.add("selected-winner");
+
+    let winningItem =
+      closestIndex >= 0 && closestIndex < this.spinnerItems.length
+        ? this.spinnerItems[closestIndex]
+        : this.selectedItem;
+
+    console.log("Winning item:", winningItem);
+    console.log("Calling App.showResult()…");
+
+    // --- Detect reloads/unloads ---
+    let unloadLogged = false;
+    const unloadHandler = (e) => {
+      unloadLogged = true;
+      console.error("IOS UNLOAD DETECTED:", e);
+      console.trace();
+    };
+
+    window.addEventListener("beforeunload", unloadHandler, { once: true });
+    window.addEventListener("unload", unloadHandler, { once: true });
+    window.addEventListener("pagehide", unloadHandler, { once: true });
+
+    if (document.visibilityState === "hidden") {
+      console.warn("Page hidden — aborting showResult");
+      return;
     }
-
-    let winningItem;
-    if (closestIndex >= 0 && closestIndex < this.spinnerItems.length) {
-      winningItem = this.spinnerItems[closestIndex];
-    } else {
-      winningItem = this.selectedItem;
-    }
-
-    console.log("Winning item:", JSON.stringify(winningItem));
-    console.log("About to call showResult in 1500ms");
-
-    // Play winning sound
-    this.playWinSound();
-
-    // CRITICAL: Call showResult after delay
-    setTimeout(() => {
-      console.log("=== CALLING APP.SHOWRESULT ===");
-      console.log("Timestamp:", Date.now());
-      console.log("App object exists:", typeof App !== "undefined");
-      console.log(
-        "App.showResult exists:",
-        typeof App.showResult === "function"
-      );
-
-      if (typeof App !== "undefined" && App.showResult) {
-        App.showResult(winningItem);
-        console.log("=== APP.SHOWRESULT CALLED SUCCESSFULLY ===");
-      } else {
-        console.error("ERROR: App or App.showResult not found!");
-      }
-    }, 1500);
-
-    console.log("=== SPINNER FINISH END ===");
-  },
-
-  // ADD THIS METHOD - Play winning sound
-  playWinSound() {
-    if (!this.audioContext) return;
 
     try {
-      // Play a celebratory chord
-      const frequencies = [523.25, 659.25, 783.99]; // C-E-G chord
+      if (App?.showResult) {
+        App.showResult(winningItem);
+        console.log("showResult() executed.");
+      } else {
+        console.error("App.showResult NOT FOUND!");
+      }
+    } catch (err) {
+      console.error("Error calling showResult:", err);
+    }
 
-      frequencies.forEach((freq, index) => {
+    setTimeout(() => {
+      if (unloadLogged) {
+        console.error(
+          "PAGE RELOADED DURING showResult — this is the iOS issue."
+        );
+      }
+    }, 800);
+  },
+
+  // Play winning sound
+  playWinSound() {
+    if (!this.audioContext) return;
+    try {
+      const frequencies = [523.25, 659.25, 783.99];
+      frequencies.forEach((freq, i) => {
         setTimeout(() => {
-          const oscillator = this.audioContext.createOscillator();
-          const gainNode = this.audioContext.createGain();
+          const osc = this.audioContext.createOscillator();
+          const gain = this.audioContext.createGain();
 
-          oscillator.connect(gainNode);
-          gainNode.connect(this.audioContext.destination);
+          osc.connect(gain);
+          gain.connect(this.audioContext.destination);
 
-          oscillator.type = "sine";
-          oscillator.frequency.setValueAtTime(
-            freq,
-            this.audioContext.currentTime
-          );
+          osc.type = "sine";
+          osc.frequency.setValueAtTime(freq, this.audioContext.currentTime);
 
-          gainNode.gain.setValueAtTime(0.2, this.audioContext.currentTime);
-          gainNode.gain.exponentialRampToValueAtTime(
+          gain.gain.setValueAtTime(0.2, this.audioContext.currentTime);
+          gain.gain.exponentialRampToValueAtTime(
             0.01,
             this.audioContext.currentTime + 0.5
           );
 
-          oscillator.start(this.audioContext.currentTime);
-          oscillator.stop(this.audioContext.currentTime + 0.5);
-        }, index * 100);
+          osc.start(this.audioContext.currentTime);
+          osc.stop(this.audioContext.currentTime + 0.5);
+        }, i * 100);
       });
-    } catch (e) {
-      console.log("Win sound error:", e);
-    }
+    } catch (e) {}
   },
 
   // Reset spinner
@@ -383,7 +380,7 @@ const Spinner = {
     this.velocity = 0;
     this.selectedItem = null;
     this.spinnerItems = [];
-    this.lastTickPosition = 0; // ADD THIS
+    this.lastTickPosition = 0;
 
     if (this.animationFrame) {
       cancelAnimationFrame(this.animationFrame);
