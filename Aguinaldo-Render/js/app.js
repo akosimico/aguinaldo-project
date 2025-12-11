@@ -327,6 +327,13 @@ const App = {
       }
       if (this.spinnerScreen) {
         this.spinnerScreen.classList.remove("hidden");
+        // Ensure spinner screen is fixed and has no scrollbar
+        this.spinnerScreen.style.position = "fixed";
+        this.spinnerScreen.style.top = "0";
+        this.spinnerScreen.style.left = "0";
+        this.spinnerScreen.style.width = "100vw";
+        this.spinnerScreen.style.height = "100vh";
+        this.spinnerScreen.style.overflow = "hidden";
       }
 
       const stopBtn = document.getElementById("stopSpinBtn");
@@ -355,31 +362,43 @@ const App = {
       }
 
       const spinnerScreen = this.spinnerScreen;
-      const isIOS =
-        /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
 
-      // On iOS, avoid opacity changes (can trigger reloads)
+      // Instead of changing spinnerScreen opacity, add a lightweight overlay
+      let overlay = document.createElement('div');
+      overlay.id = 'resultOverlayBg';
+      overlay.setAttribute('style', `
+        position: fixed;
+        inset: 0;
+        width: 100vw;
+        height: 100vh;
+        background: rgba(0,0,0,0.65);
+        z-index: 100009;
+        pointer-events: none;
+        transition: opacity 0.25s ease;
+        opacity: 0;
+        will-change: opacity;
+      `);
+      document.body.appendChild(overlay);
+      // Fade in overlay
+      requestAnimationFrame(() => {
+        overlay.style.opacity = '1';
+      });
+
       if (spinnerScreen) {
-        if (!isIOS) {
-          spinnerScreen.style.opacity = "0.25";
-        }
         spinnerScreen.style.pointerEvents = "none";
       }
 
       // Create the result screen
       const resultScreen = document.createElement("div");
       resultScreen.id = "resultScreen";
-
-      // iPhone-safe fullscreen overlay, ensure z-index above confetti
-      // Add hardware acceleration for iOS (will-change, translateZ)
       resultScreen.setAttribute(
         "style",
         `
         position: fixed;
         inset: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0,0,0,0.65);
+        width: 100vw;
+        height: 100vh;
         z-index: 100010;
         display: flex;
         align-items: center;
@@ -680,19 +699,16 @@ const App = {
 
   closeResult() {
     const rs = document.getElementById("resultScreen");
+    const overlay = document.getElementById("resultOverlayBg");
     if (!rs) return;
 
     rs.style.opacity = "0";
-
-    // Detect iOS
-    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+    if (overlay) overlay.style.opacity = "0";
 
     setTimeout(() => {
       rs.remove();
+      if (overlay) overlay.remove();
       if (this.spinnerScreen) {
-        if (!isIOS) {
-          this.spinnerScreen.style.opacity = "1";
-        }
         this.spinnerScreen.style.pointerEvents = "auto";
       }
     }, 200);
