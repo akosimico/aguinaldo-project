@@ -75,9 +75,8 @@ const Spinner = {
   // Generate spinner items array
   generateSpinnerItems(selectedItem) {
     const spinnerItems = [];
-    // REDUCED for iOS safety
-    const totalItems = 10; // was 50
-    const cycles = 5;      // was 25
+    const totalItems = 50;
+    const cycles = 25;
 
     for (let cycle = 0; cycle < cycles; cycle++) {
       for (let i = 0; i < totalItems; i++) {
@@ -142,46 +141,11 @@ const Spinner = {
     // Select winning item
     this.selectedItem = this.selectWeightedRandom();
 
-
-    // Log memory usage before rendering spinner
-    if (performance && performance.memory) {
-      var mem = performance.memory;
-      var usedMB = (mem.usedJSHeapSize / 1048576).toFixed(2);
-      var totalMB = (mem.totalJSHeapSize / 1048576).toFixed(2);
-      var limitMB = (mem.jsHeapSizeLimit / 1048576).toFixed(2);
-      console.log(
-        "[SPINNER] Before render: " +
-          usedMB +
-          " MB used / " +
-          totalMB +
-          " MB total (limit: " +
-          limitMB +
-          " MB)"
-      );
-    }
-
     // Generate spinner items
     this.spinnerItems = this.generateSpinnerItems(this.selectedItem);
 
     // Render track
     this.renderTrack(this.spinnerItems);
-
-    // Log memory usage after rendering spinner
-    if (performance && performance.memory) {
-      var mem = performance.memory;
-      var usedMB = (mem.usedJSHeapSize / 1048576).toFixed(2);
-      var totalMB = (mem.totalJSHeapSize / 1048576).toFixed(2);
-      var limitMB = (mem.jsHeapSizeLimit / 1048576).toFixed(2);
-      console.log(
-        "[SPINNER] After render: " +
-          usedMB +
-          " MB used / " +
-          totalMB +
-          " MB total (limit: " +
-          limitMB +
-          " MB)"
-      );
-    }
 
     // Reset state
     this.currentPosition = 0;
@@ -190,6 +154,9 @@ const Spinner = {
 
     // Start animation
     this.animate();
+
+    // Play tick sound on start
+    this.playTick();
 
     // Vibrate
     if (navigator.vibrate) {
@@ -333,7 +300,11 @@ const Spinner = {
       }
     });
 
-    if (closestItem) closestItem.classList.add("selected-winner");
+
+    if (closestItem) {
+      closestItem.classList.add("selected-winner");
+      this.playWinSound();
+    }
 
     let winningItem =
       closestIndex >= 0 && closestIndex < this.spinnerItems.length
