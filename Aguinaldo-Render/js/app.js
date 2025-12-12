@@ -378,8 +378,7 @@ const App = {
     }
   },
 
-  // Show spinner screen
- // Alternative: Keep auto-start but fix state
+ // Show spinner screen
 showSpinner() {
   try {
     console.log("Showing spinner screen");
@@ -388,6 +387,7 @@ showSpinner() {
     }
     if (this.spinnerScreen) {
       this.spinnerScreen.classList.remove("hidden");
+      // Ensure spinner screen is fixed and has no scrollbar
       this.spinnerScreen.style.position = "fixed";
       this.spinnerScreen.style.top = "0";
       this.spinnerScreen.style.left = "0";
@@ -396,7 +396,7 @@ showSpinner() {
       this.spinnerScreen.style.overflow = "hidden";
     }
 
-    // Reset spinner completely first
+    // Reset spinner state completely
     Spinner.reset();
     
     const stopBtn = document.getElementById("stopSpinBtn");
@@ -405,10 +405,17 @@ showSpinner() {
       stopBtn.innerHTML = this.spinIconHTMLs.idle;
     }
 
-    // Auto-start after reset
+    const instruction = document.getElementById('spinnerInstruction');
+    if (instruction) {
+      instruction.textContent = '✨ Tap anywhere or press SPIN to start! ✨';
+      instruction.classList.add('pulse-animation');
+    }
+
+    // Start idle rotation after a brief delay
     setTimeout(() => {
-      Spinner.start();
-    }, 500);
+      Spinner.startIdleRotation();
+    }, 300);
+
   } catch (error) {
     console.error("Error showing spinner:", error);
   }
@@ -780,22 +787,25 @@ showSpinner() {
   },
 
   closeResult() {
-    const rs = document.getElementById("resultScreen");
-    const overlay = document.getElementById("resultOverlayBg");
-    if (!rs) return;
+  const rs = document.getElementById("resultScreen");
+  const overlay = document.getElementById("resultOverlayBg");
+  if (!rs) return;
 
-    rs.style.opacity = "0";
-    if (overlay) overlay.style.opacity = "0";
+  rs.style.opacity = "0";
+  if (overlay) overlay.style.opacity = "0";
 
-    setTimeout(() => {
-      rs.remove();
-      if (overlay) overlay.remove();
-      if (this.spinnerScreen) {
-        this.spinnerScreen.style.pointerEvents = "auto";
-      }
-    }, 200);
-  },
-
+  setTimeout(() => {
+    rs.remove();
+    if (overlay) overlay.remove();
+    if (this.spinnerScreen) {
+      this.spinnerScreen.style.pointerEvents = "auto";
+    }
+    
+    // Resume idle rotation after closing result
+    Spinner.resetUI();
+    Spinner.startIdleRotation();
+  }, 200);
+},
   // Helper function for rarity gradients
   getRarityGradient(rarity) {
     switch (rarity) {
@@ -1106,5 +1116,6 @@ showSpinner() {
 document.addEventListener("DOMContentLoaded", () => {
   App.init();
 });
+
 
 
