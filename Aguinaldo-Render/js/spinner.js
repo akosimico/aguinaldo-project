@@ -75,8 +75,8 @@ const Spinner = {
   // Generate spinner items array
   generateSpinnerItems(selectedItem) {
     const spinnerItems = [];
-    const totalItems = 30;
-    const cycles = 10;
+    const totalItems = 40;
+    const cycles = 15;
 
     for (let cycle = 0; cycle < cycles; cycle++) {
       for (let i = 0; i < totalItems; i++) {
@@ -132,6 +132,21 @@ const Spinner = {
 
     this.isSpinning = true;
     this.items = ItemManager.getAllItems();
+
+    // Update UI to show spinning state
+    const instruction = document.getElementById('spinnerInstruction');
+    if (instruction) {
+      // Remove all child nodes to force update
+      while (instruction.firstChild) instruction.removeChild(instruction.firstChild);
+      instruction.innerHTML = '🎡 Spinning...';
+      instruction.classList.remove('pulse-animation');
+    }
+    const spinBtn = document.getElementById('stopSpinBtn');
+    if (spinBtn) {
+      spinBtn.textContent = 'Spinning...';
+      spinBtn.disabled = true;
+      spinBtn.classList.add('opacity-60', 'cursor-not-allowed');
+    }
 
     if (this.items.length === 0) {
       App.showToast("No items available!");
@@ -270,6 +285,20 @@ const Spinner = {
 
     this.isSpinning = false;
 
+    // Restore UI to allow spinning again
+    const instruction = document.getElementById('spinnerInstruction');
+    if (instruction) {
+      while (instruction.firstChild) instruction.removeChild(instruction.firstChild);
+      instruction.innerHTML = '✨ Tap anywhere or press SPIN to start! ✨';
+      instruction.classList.add('pulse-animation');
+    }
+    const spinBtn = document.getElementById('stopSpinBtn');
+    if (spinBtn) {
+      spinBtn.textContent = 'SPIN';
+      spinBtn.disabled = false;
+      spinBtn.classList.remove('opacity-60', 'cursor-not-allowed');
+    }
+
     if (this.animationFrame) {
       cancelAnimationFrame(this.animationFrame);
       this.animationFrame = null;
@@ -403,4 +432,3 @@ const Spinner = {
     }
   },
 };
-
