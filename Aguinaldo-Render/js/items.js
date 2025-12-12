@@ -81,6 +81,49 @@ const ItemManager = {
         return { success: true, message: 'Item deleted successfully' };
     },
     
+
+    // Set preset items (luck/skill based)
+    setPresetItems(type = 'luck') {
+        let preset;
+        if (type === 'skill') {
+            preset = [
+                { value: '20', weight: 20, rarity: 'common' },
+                { value: '50', weight: 20, rarity: 'uncommon' },
+                { value: '100', weight: 15, rarity: 'rare' },
+                { value: '200', weight: 15, rarity: 'rare' },
+                { value: 'Better luck next time', weight: 30, rarity: 'common' },
+            ];
+        } else {
+            preset = [
+                { value: '20', weight: 20, rarity: 'common' },
+                { value: '50', weight: 20, rarity: 'uncommon' },
+                { value: '100', weight: 15, rarity: 'rare' },
+                { value: '200', weight: 15, rarity: 'rare' },
+                { value: 'Better luck next time', weight: 30, rarity: 'common' },
+            ];
+        }
+
+        // Limit rare items to appear only 2-5 times in total
+        const minRare = 2;
+        const maxRare = 5;
+        const rareCount = Math.floor(Math.random() * (maxRare - minRare + 1)) + minRare;
+        // Filter out rare items
+        const rareItems = preset.filter(item => item.rarity === 'rare');
+        const nonRareItems = preset.filter(item => item.rarity !== 'rare');
+        // Shuffle rare items and pick up to rareCount
+        const shuffledRare = rareItems.sort(() => Math.random() - 0.5).slice(0, rareCount);
+        // Combine and shuffle again for randomness
+        const finalPreset = [...nonRareItems, ...shuffledRare].sort(() => Math.random() - 0.5);
+
+        this.items = finalPreset.map(item => ({
+            ...item,
+            id: Storage.generateId(),
+        }));
+        Storage.saveItems(this.items);
+        this.renderItemsList();
+        return { success: true, message: 'Preset items applied!' };
+    },
+
     // Reset to default
     resetToDefault() {
         this.items = Storage.resetToDefault();
