@@ -76,38 +76,22 @@ const Spinner = {
     return this.items[0]; // Fallback
   },
 
-  // Generate spinner items array
-  generateSpinnerItems(selectedItem) {
+ generateSpinnerItems(selectedItem) {
     const spinnerItems = [];
     const totalItems = 30;
     const cycles = 10;
 
     for (let cycle = 0; cycle < cycles; cycle++) {
       for (let i = 0; i < totalItems; i++) {
+        // Place the selected (winning) item at the right spot
         if (
           cycle === Math.floor(cycles / 2) &&
           i === Math.floor(totalItems * 0.75)
         ) {
           spinnerItems.push({ ...selectedItem, isSelected: true });
         } else {
-          let item;
-
-          if (
-            cycle === Math.floor(cycles / 2) &&
-            i > Math.floor(totalItems * 0.6) &&
-            i < Math.floor(totalItems * 0.75)
-          ) {
-            const rareItems = this.items.filter(
-              (item) => item.rarity === "rare" || item.rarity === "uncommon"
-            );
-            item =
-              rareItems.length > 0
-                ? rareItems[Math.floor(Math.random() * rareItems.length)]
-                : this.selectWeightedRandom();
-          } else {
-            item = this.selectWeightedRandom();
-          }
-
+          // Always use weighted random for all other items
+          const item = this.selectWeightedRandom();
           spinnerItems.push({ ...item, isSelected: false });
         }
       }
@@ -524,3 +508,4 @@ const Spinner = {
     this.resetUI();
   },
 };
+
