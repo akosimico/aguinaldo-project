@@ -8,6 +8,7 @@ const App = {
   toast: null,
 
   confirmCallback: null,
+  isProcessing: false, // 🎯 Flag to prevent spam clicks
 
   // SVG HTML for spin button states
   spinIconHTMLs: {
@@ -177,25 +178,34 @@ const App = {
         });
       }
 
-      // Spinner controls
-
+      // 🎯 Spinner controls with spam prevention
       if (stopSpinBtn) {
         stopSpinBtn.addEventListener("click", (e) => {
           e.preventDefault();
           e.stopPropagation();
           const btn = e.currentTarget;
-          if (!Spinner.isSpinning) {
-            btn.innerHTML = this.spinIconHTMLs.spinning;
-            Spinner.start();
-          } else {
+          
+          // Prevent spam clicks
+          if (btn.disabled || Spinner.isSpinning || this.isProcessing) {
+            console.log("Button already pressed, ignoring click");
+            return;
+          }
+          
+          if (!Spinner.isSpinning && !this.isProcessing) {
+            this.isProcessing = true;
             btn.disabled = true;
             btn.innerHTML = this.spinIconHTMLs.spinning;
-            Spinner.stop();
+            Spinner.start();
+            
+            // Reset flag after spin completes
+            setTimeout(() => {
+              this.isProcessing = false;
+            }, 5500); // 3s spin + 1.5s deceleration + 1s buffer
           }
         });
       }
 
-      // Allow tapping anywhere on spinner screen to start/stop
+      // 🎯 Allow tapping anywhere on spinner screen with spam prevention
       if (this.spinnerScreen) {
         this.spinnerScreen.addEventListener("click", (e) => {
           // Ignore clicks on buttons
@@ -204,16 +214,26 @@ const App = {
           // If result screen is open, do nothing
           if (document.getElementById("resultScreen")) return;
 
+          // Prevent spam taps
+          if (this.isProcessing || Spinner.isSpinning) {
+            console.log("Already processing, ignoring tap");
+            return;
+          }
+
           const stopBtn = document.getElementById("stopSpinBtn");
-          if (!Spinner.isSpinning) {
-            if (stopBtn) stopBtn.innerHTML = this.spinIconHTMLs.spinning;
-            Spinner.start();
-          } else {
+          
+          if (!Spinner.isSpinning && !this.isProcessing) {
+            this.isProcessing = true;
             if (stopBtn) {
               stopBtn.disabled = true;
               stopBtn.innerHTML = this.spinIconHTMLs.spinning;
             }
-            Spinner.stop();
+            Spinner.start();
+            
+            // Reset flag after spin completes
+            setTimeout(() => {
+              this.isProcessing = false;
+            }, 5500); // 3s spin + 1.5s deceleration + 1s buffer
           }
         });
       }
@@ -223,13 +243,24 @@ const App = {
       const addItemBtn = document.getElementById("addItemBtn");
       const resetItemsBtn = document.getElementById("resetItemsBtn");
       const presetItemsBtn = document.getElementById("presetItemsBtn");
+      
+      // 🎯 Preset button with item reload
       if (presetItemsBtn) {
         presetItemsBtn.addEventListener("click", (e) => {
           e.preventDefault();
           e.stopPropagation();
-          // Always set to the 20-50-100-200-'Better luck next time' (luck-based) preset
+          
           const result = ItemManager.setPresetItems('luck');
           App.showToast(result.message);
+          
+          // 🎯 IMPORTANT: Reload items in spinner
+          Spinner.items = ItemManager.getAllItems();
+          
+          // If idle rotation is active, restart it with new items
+          if (Spinner.isIdleRotating) {
+            Spinner.stopIdleRotation();
+            Spinner.startIdleRotation();
+          }
         });
       }
 
@@ -378,48 +409,48 @@ const App = {
     }
   },
 
- // Show spinner screen
-showSpinner() {
-  try {
-    console.log("Showing spinner screen");
-    if (this.landingScreen) {
-      this.landingScreen.classList.add("hidden");
-    }
-    if (this.spinnerScreen) {
-      this.spinnerScreen.classList.remove("hidden");
-      // Ensure spinner screen is fixed and has no scrollbar
-      this.spinnerScreen.style.position = "fixed";
-      this.spinnerScreen.style.top = "0";
-      this.spinnerScreen.style.left = "0";
-      this.spinnerScreen.style.width = "100vw";
-      this.spinnerScreen.style.height = "100vh";
-      this.spinnerScreen.style.overflow = "hidden";
-    }
+  // Show spinner screen
+  showSpinner() {
+    try {
+      console.log("Showing spinner screen");
+      if (this.landingScreen) {
+        this.landingScreen.classList.add("hidden");
+      }
+      if (this.spinnerScreen) {
+        this.spinnerScreen.classList.remove("hidden");
+        // Ensure spinner screen is fixed and has no scrollbar
+        this.spinnerScreen.style.position = "fixed";
+        this.spinnerScreen.style.top = "0";
+        this.spinnerScreen.style.left = "0";
+        this.spinnerScreen.style.width = "100vw";
+        this.spinnerScreen.style.height = "100vh";
+        this.spinnerScreen.style.overflow = "hidden";
+      }
 
-    // Reset spinner state completely
-    Spinner.reset();
-    
-    const stopBtn = document.getElementById("stopSpinBtn");
-    if (stopBtn) {
-      stopBtn.disabled = false;
-      stopBtn.innerHTML = this.spinIconHTMLs.idle;
+      // Reset spinner state completely
+      Spinner.reset();
+      
+      const stopBtn = document.getElementById("stopSpinBtn");
+      if (stopBtn) {
+        stopBtn.disabled = false;
+        stopBtn.innerHTML = this.spinIconHTMLs.idle;
+      }
+
+      const instruction = document.getElementById('spinnerInstruction');
+      if (instruction) {
+        instruction.textContent = '✨ Tap anywhere or press SPIN to start! ✨';
+        instruction.classList.add('pulse-animation');
+      }
+
+      // Start idle rotation after a brief delay
+      setTimeout(() => {
+        Spinner.startIdleRotation();
+      }, 300);
+
+    } catch (error) {
+      console.error("Error showing spinner:", error);
     }
-
-    const instruction = document.getElementById('spinnerInstruction');
-    if (instruction) {
-      instruction.textContent = '✨ Tap anywhere or press SPIN to start! ✨';
-      instruction.classList.add('pulse-animation');
-    }
-
-    // Start idle rotation after a brief delay
-    setTimeout(() => {
-      Spinner.startIdleRotation();
-    }, 300);
-
-  } catch (error) {
-    console.error("Error showing spinner:", error);
-  }
-},
+  },
 
   // Show result as full-screen overlay with blurred spinner background
   showResult(item) {
@@ -744,24 +775,6 @@ showSpinner() {
         to {
           opacity: 1;
           transform: translateY(0) scale(1);
-          // Log memory usage if available
-          if (performance && performance.memory) {
-            var mem = performance.memory;
-            var usedMB = (mem.usedJSHeapSize / 1048576).toFixed(2);
-            var totalMB = (mem.totalJSHeapSize / 1048576).toFixed(2);
-            var limitMB = (mem.jsHeapSizeLimit / 1048576).toFixed(2);
-            console.log(
-              "Memory usage: " +
-                usedMB +
-                " MB used / " +
-                totalMB +
-                " MB total (limit: " +
-                limitMB +
-                " MB)"
-            );
-          } else {
-            console.log("Memory usage info not available in this browser.");
-          }
         }
       }
 
@@ -787,25 +800,26 @@ showSpinner() {
   },
 
   closeResult() {
-  const rs = document.getElementById("resultScreen");
-  const overlay = document.getElementById("resultOverlayBg");
-  if (!rs) return;
+    const rs = document.getElementById("resultScreen");
+    const overlay = document.getElementById("resultOverlayBg");
+    if (!rs) return;
 
-  rs.style.opacity = "0";
-  if (overlay) overlay.style.opacity = "0";
+    rs.style.opacity = "0";
+    if (overlay) overlay.style.opacity = "0";
 
-  setTimeout(() => {
-    rs.remove();
-    if (overlay) overlay.remove();
-    if (this.spinnerScreen) {
-      this.spinnerScreen.style.pointerEvents = "auto";
-    }
-    
-    // Resume idle rotation after closing result
-    Spinner.resetUI();
-    Spinner.startIdleRotation();
-  }, 200);
-},
+    setTimeout(() => {
+      rs.remove();
+      if (overlay) overlay.remove();
+      if (this.spinnerScreen) {
+        this.spinnerScreen.style.pointerEvents = "auto";
+      }
+      
+      // Resume idle rotation after closing result
+      Spinner.resetUI();
+      Spinner.startIdleRotation();
+    }, 200);
+  },
+  
   // Helper function for rarity gradients
   getRarityGradient(rarity) {
     switch (rarity) {
@@ -856,7 +870,7 @@ showSpinner() {
     }
   },
 
-  // Handle add or update item
+  // 🎯 Handle add or update item with item reload
   handleAddOrUpdateItem() {
     try {
       const valueInput = document.getElementById("newItemValue");
@@ -885,7 +899,15 @@ showSpinner() {
         this.showToast(result.message);
         this.clearItemForm();
         ItemManager.renderItemsList();
-        Spinner.init();
+        
+        // 🎯 IMPORTANT: Reload items in spinner
+        Spinner.items = ItemManager.getAllItems();
+        
+        // If idle rotation is active, restart it with new items
+        if (Spinner.isIdleRotating) {
+          Spinner.stopIdleRotation();
+          Spinner.startIdleRotation();
+        }
       } else {
         this.showToast(result.message);
       }
@@ -894,7 +916,7 @@ showSpinner() {
     }
   },
 
-  // Handle reset items
+  // 🎯 Handle reset items with item reload
   handleResetItems() {
     try {
       this.showConfirm(
@@ -903,7 +925,15 @@ showSpinner() {
         () => {
           const result = ItemManager.resetToDefault();
           this.showToast(result.message);
-          Spinner.init();
+          
+          // 🎯 IMPORTANT: Reload items in spinner
+          Spinner.items = ItemManager.getAllItems();
+          
+          // If idle rotation is active, restart it with new items
+          if (Spinner.isIdleRotating) {
+            Spinner.stopIdleRotation();
+            Spinner.startIdleRotation();
+          }
         }
       );
     } catch (error) {
@@ -1116,6 +1146,3 @@ showSpinner() {
 document.addEventListener("DOMContentLoaded", () => {
   App.init();
 });
-
-
-
