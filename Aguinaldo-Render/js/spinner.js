@@ -75,8 +75,8 @@ const Spinner = {
   // Generate spinner items array
   generateSpinnerItems(selectedItem) {
     const spinnerItems = [];
-    const totalItems = 50;
-    const cycles = 25;
+    const totalItems = 30;
+    const cycles = 10;
 
     for (let cycle = 0; cycle < cycles; cycle++) {
       for (let i = 0; i < totalItems; i++) {
@@ -403,3 +403,4 @@ const Spinner = {
     }
   },
 };
+
