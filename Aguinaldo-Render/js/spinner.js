@@ -127,20 +127,17 @@ const Spinner = {
   },
 
   // Start spinning
-  start() {
+start() {
     if (this.isSpinning) return;
 
     this.isSpinning = true;
-    this.items = ItemManager.getAllItems();
 
-    // Update UI to show spinning state
     const instruction = document.getElementById('spinnerInstruction');
     if (instruction) {
-      // Remove all child nodes to force update
-      while (instruction.firstChild) instruction.removeChild(instruction.firstChild);
-      instruction.innerHTML = '🎡 Spinning...';
+      instruction.textContent = '🎡 Spinning...';
       instruction.classList.remove('pulse-animation');
     }
+
     const spinBtn = document.getElementById('stopSpinBtn');
     if (spinBtn) {
       spinBtn.textContent = 'Spinning...';
@@ -279,19 +276,15 @@ const Spinner = {
     this.animationFrame = requestAnimationFrame(() => this.animate());
   },
 
-  // FINISH — updated for iOS safety + unload tracing
   finish() {
-    console.log("=== SPINNER FINISH START ===");
-
     this.isSpinning = false;
 
-    // Restore UI to allow spinning again
     const instruction = document.getElementById('spinnerInstruction');
     if (instruction) {
-      while (instruction.firstChild) instruction.removeChild(instruction.firstChild);
-      instruction.innerHTML = '✨ Tap anywhere or press SPIN to start! ✨';
+      instruction.textContent = '✨ Tap anywhere or press SPIN to start! ✨';
       instruction.classList.add('pulse-animation');
     }
+
     const spinBtn = document.getElementById('stopSpinBtn');
     if (spinBtn) {
       spinBtn.textContent = 'SPIN';
@@ -432,3 +425,4 @@ const Spinner = {
     }
   },
 };
+
