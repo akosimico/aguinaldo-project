@@ -178,39 +178,43 @@ const App = {
       }
 
       // Spinner controls
+
       if (stopSpinBtn) {
         stopSpinBtn.addEventListener("click", (e) => {
           e.preventDefault();
           e.stopPropagation();
           const btn = e.currentTarget;
-          btn.disabled = true;
-          btn.innerHTML = this.spinIconHTMLs.spinning;
-          Spinner.stop();
+          if (!Spinner.isSpinning) {
+            btn.innerHTML = this.spinIconHTMLs.spinning;
+            Spinner.start();
+          } else {
+            btn.disabled = true;
+            btn.innerHTML = this.spinIconHTMLs.spinning;
+            Spinner.stop();
+          }
         });
       }
 
-      // Allow tapping anywhere on spinner screen to stop — iPhone SAFE
+      // Allow tapping anywhere on spinner screen to start/stop
       if (this.spinnerScreen) {
         this.spinnerScreen.addEventListener("click", (e) => {
           // Ignore clicks on buttons
           if (e.target.closest("button")) return;
 
-          console.log("Background tapped");
-
           // If result screen is open, do nothing
           if (document.getElementById("resultScreen")) return;
 
-          // If spinner isn't spinning, ignore
-          if (!Spinner.isSpinning) return;
-
-          // Stop spinner
           const stopBtn = document.getElementById("stopSpinBtn");
-          if (stopBtn) {
-            stopBtn.disabled = true;
-            stopBtn.innerHTML = this.spinIconHTMLs.spinning;
+          if (!Spinner.isSpinning) {
+            if (stopBtn) stopBtn.innerHTML = this.spinIconHTMLs.spinning;
+            Spinner.start();
+          } else {
+            if (stopBtn) {
+              stopBtn.disabled = true;
+              stopBtn.innerHTML = this.spinIconHTMLs.spinning;
+            }
+            Spinner.stop();
           }
-
-          Spinner.stop();
         });
       }
 
@@ -218,6 +222,16 @@ const App = {
       const closeSettingsBtn = document.getElementById("closeSettingsBtn");
       const addItemBtn = document.getElementById("addItemBtn");
       const resetItemsBtn = document.getElementById("resetItemsBtn");
+      const presetItemsBtn = document.getElementById("presetItemsBtn");
+      if (presetItemsBtn) {
+        presetItemsBtn.addEventListener("click", (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          // Always set to the 20-50-100-200-'Better luck next time' (luck-based) preset
+          const result = ItemManager.setPresetItems('luck');
+          App.showToast(result.message);
+        });
+      }
 
       if (closeSettingsBtn) {
         closeSettingsBtn.addEventListener("click", (e) => {
@@ -383,6 +397,7 @@ const App = {
       }
 
       const stopBtn = document.getElementById("stopSpinBtn");
+
       if (stopBtn) {
         stopBtn.disabled = false;
         stopBtn.innerHTML = this.spinIconHTMLs.idle;
@@ -950,8 +965,17 @@ const App = {
   showToast(message) {
     try {
       const toastMessage = document.getElementById("toastMessage");
+      let friendly = message;
+      // Add emoji and friendlier text for common actions
+      if (/success|added|updated|saved|applied|congrat/i.test(message)) {
+        friendly = `🎉 ${message.replace(/successfully|applied/i, '').trim()}!`;
+      } else if (/error|fail|invalid|not found|cannot|required/i.test(message)) {
+        friendly = `⚠️ ${message.charAt(0).toUpperCase() + message.slice(1)}`;
+      } else if (/deleted|remove/i.test(message)) {
+        friendly = `🗑️ ${message}`;
+      }
       if (toastMessage) {
-        toastMessage.textContent = message;
+        toastMessage.textContent = friendly;
       }
 
       if (this.toast) {
@@ -1079,3 +1103,4 @@ const App = {
 document.addEventListener("DOMContentLoaded", () => {
   App.init();
 });
+
