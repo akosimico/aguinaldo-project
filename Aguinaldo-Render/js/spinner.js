@@ -3,6 +3,7 @@ const Spinner = {
   track: null,
   items: [],
   isSpinning: false,
+  isIdleRotating: false,
   animationFrame: null,
   currentPosition: 0,
   velocity: 0,
@@ -115,6 +116,19 @@ const Spinner = {
     return spinnerItems;
   },
 
+  // Generate idle spinner items (just for visual effect, no winner)
+  generateIdleSpinnerItems() {
+    const spinnerItems = [];
+    const totalItems = 50; // More items for continuous idle loop
+
+    for (let i = 0; i < totalItems; i++) {
+      const item = this.selectWeightedRandom();
+      spinnerItems.push({ ...item, isSelected: false });
+    }
+
+    return spinnerItems;
+  },
+
   // Render spinner track
   renderTrack(items) {
     this.track.innerHTML = items
@@ -145,8 +159,66 @@ const Spinner = {
     }
   },
 
-  // Start spinning
+  // Start idle rotation (slow automatic scroll)
+  startIdleRotation() {
+    if (this.isIdleRotating || this.isSpinning) return;
+
+    console.log("Starting idle rotation");
+    this.isIdleRotating = true;
+
+    // Generate idle items
+    this.spinnerItems = this.generateIdleSpinnerItems();
+    this.renderTrack(this.spinnerItems);
+
+    // Start at position 0
+    this.currentPosition = 0;
+    this.velocity = 0.8; // Slow speed for idle
+
+    // Start animation
+    this.animateIdle();
+  },
+
+  // Stop idle rotation
+  stopIdleRotation() {
+    if (!this.isIdleRotating) return;
+
+    console.log("Stopping idle rotation");
+    this.isIdleRotating = false;
+
+    if (this.animationFrame) {
+      cancelAnimationFrame(this.animationFrame);
+      this.animationFrame = null;
+    }
+  },
+
+  // Idle animation loop (infinite slow scroll)
+  animateIdle() {
+    if (!this.isIdleRotating) return;
+
+    this.currentPosition -= this.velocity;
+
+    // Loop back when we've scrolled through enough items
+    const itemWidth = 170;
+    const totalWidth = this.spinnerItems.length * itemWidth;
+    
+    if (Math.abs(this.currentPosition) >= totalWidth / 2) {
+      this.currentPosition = 0;
+    }
+
+    this.track.style.transform = `translateX(${this.currentPosition}px)`;
+
+    this.animationFrame = requestAnimationFrame(() => this.animateIdle());
+  },
+
+  // Start spinning (fast spin with winner selection)
   start() {
+    console.log("Starting actual spin");
+
+    // Stop idle rotation if running
+    if (this.isIdleRotating) {
+      this.stopIdleRotation();
+    }
+
     // Force reset if somehow called while already spinning
     if (this.isSpinning) {
       console.warn('Spinner already spinning - resetting first');
@@ -172,13 +244,14 @@ const Spinner = {
       App.showToast("No items available!");
       this.isSpinning = false;
       this.resetUI();
+      this.startIdleRotation(); // Resume idle rotation
       return;
     }
 
     // Select winning item
     this.selectedItem = this.selectWeightedRandom();
 
-    // Generate spinner items
+    // Generate spinner items with winner
     this.spinnerItems = this.generateSpinnerItems(this.selectedItem);
 
     // Render track
@@ -280,7 +353,7 @@ const Spinner = {
     decelerate();
   },
 
-  // Animation loop
+  // Animation loop (fast spin)
   animate() {
     if (!this.isSpinning) return;
 
@@ -422,6 +495,7 @@ const Spinner = {
   // Reset spinner
   reset() {
     this.isSpinning = false;
+    this.isIdleRotating = false;
     this.currentPosition = 0;
     this.velocity = 0;
     this.selectedItem = null;
