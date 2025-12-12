@@ -18,6 +18,9 @@ const Spinner = {
 
     // Initialize tick sound using Web Audio API
     this.initTickSound();
+    
+    // Reset state and UI on init
+    this.resetUI();
   },
 
   // Create tick sound
@@ -126,9 +129,29 @@ const Spinner = {
       .join("");
   },
 
+  // Reset UI to initial state
+  resetUI() {
+    const instruction = document.getElementById('spinnerInstruction');
+    if (instruction) {
+      instruction.textContent = '✨ Tap anywhere or press SPIN to start! ✨';
+      instruction.classList.add('pulse-animation');
+    }
+
+    const spinBtn = document.getElementById('stopSpinBtn');
+    if (spinBtn) {
+      spinBtn.textContent = 'SPIN';
+      spinBtn.disabled = false;
+      spinBtn.classList.remove('opacity-60', 'cursor-not-allowed');
+    }
+  },
+
   // Start spinning
-start() {
-    if (this.isSpinning) return;
+  start() {
+    // Force reset if somehow called while already spinning
+    if (this.isSpinning) {
+      console.warn('Spinner already spinning - resetting first');
+      this.reset();
+    }
 
     this.isSpinning = true;
 
@@ -147,6 +170,8 @@ start() {
 
     if (this.items.length === 0) {
       App.showToast("No items available!");
+      this.isSpinning = false;
+      this.resetUI();
       return;
     }
 
@@ -279,18 +304,8 @@ start() {
   finish() {
     this.isSpinning = false;
 
-    const instruction = document.getElementById('spinnerInstruction');
-    if (instruction) {
-      instruction.textContent = '✨ Tap anywhere or press SPIN to start! ✨';
-      instruction.classList.add('pulse-animation');
-    }
-
-    const spinBtn = document.getElementById('stopSpinBtn');
-    if (spinBtn) {
-      spinBtn.textContent = 'SPIN';
-      spinBtn.disabled = false;
-      spinBtn.classList.remove('opacity-60', 'cursor-not-allowed');
-    }
+    // Reset UI to initial state
+    this.resetUI();
 
     if (this.animationFrame) {
       cancelAnimationFrame(this.animationFrame);
@@ -321,7 +336,6 @@ start() {
         closestIndex = index;
       }
     });
-
 
     if (closestItem) {
       closestItem.classList.add("selected-winner");
@@ -423,7 +437,8 @@ start() {
       this.track.innerHTML = "";
       this.track.style.transform = "translateX(0)";
     }
+    
+    // Reset UI elements
+    this.resetUI();
   },
 };
-
-
