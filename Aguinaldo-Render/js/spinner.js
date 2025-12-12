@@ -272,6 +272,14 @@ const Spinner = {
     if (navigator.vibrate) {
       navigator.vibrate(50);
     }
+
+    // 🎯 AUTO-STOP: Automatically stop after 3 seconds of spinning
+    setTimeout(() => {
+      if (this.isSpinning) {
+        console.log("Auto-stopping spinner");
+        this.stop();
+      }
+    }, 3000); // 3 seconds of fast spinning before auto-stop
   },
 
   // Stop spinning
