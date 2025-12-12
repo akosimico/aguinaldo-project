@@ -379,37 +379,40 @@ const App = {
   },
 
   // Show spinner screen
-  showSpinner() {
-    try {
-      console.log("Showing spinner screen");
-      if (this.landingScreen) {
-        this.landingScreen.classList.add("hidden");
-      }
-      if (this.spinnerScreen) {
-        this.spinnerScreen.classList.remove("hidden");
-        // Ensure spinner screen is fixed and has no scrollbar
-        this.spinnerScreen.style.position = "fixed";
-        this.spinnerScreen.style.top = "0";
-        this.spinnerScreen.style.left = "0";
-        this.spinnerScreen.style.width = "100vw";
-        this.spinnerScreen.style.height = "100vh";
-        this.spinnerScreen.style.overflow = "hidden";
-      }
-
-      const stopBtn = document.getElementById("stopSpinBtn");
-
-      if (stopBtn) {
-        stopBtn.disabled = false;
-        stopBtn.innerHTML = this.spinIconHTMLs.idle;
-      }
-
-      setTimeout(() => {
-        Spinner.start();
-      }, 500);
-    } catch (error) {
-      console.error("Error showing spinner:", error);
+ // Alternative: Keep auto-start but fix state
+showSpinner() {
+  try {
+    console.log("Showing spinner screen");
+    if (this.landingScreen) {
+      this.landingScreen.classList.add("hidden");
     }
-  },
+    if (this.spinnerScreen) {
+      this.spinnerScreen.classList.remove("hidden");
+      this.spinnerScreen.style.position = "fixed";
+      this.spinnerScreen.style.top = "0";
+      this.spinnerScreen.style.left = "0";
+      this.spinnerScreen.style.width = "100vw";
+      this.spinnerScreen.style.height = "100vh";
+      this.spinnerScreen.style.overflow = "hidden";
+    }
+
+    // Reset spinner completely first
+    Spinner.reset();
+    
+    const stopBtn = document.getElementById("stopSpinBtn");
+    if (stopBtn) {
+      stopBtn.disabled = false;
+      stopBtn.innerHTML = this.spinIconHTMLs.idle;
+    }
+
+    // Auto-start after reset
+    setTimeout(() => {
+      Spinner.start();
+    }, 500);
+  } catch (error) {
+    console.error("Error showing spinner:", error);
+  }
+},
 
   // Show result as full-screen overlay with blurred spinner background
   showResult(item) {
@@ -1103,4 +1106,5 @@ const App = {
 document.addEventListener("DOMContentLoaded", () => {
   App.init();
 });
+
 
